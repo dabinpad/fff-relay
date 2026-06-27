@@ -614,7 +614,7 @@ function applyPreset(p){
 /* =================== RENDER =================== */
 const el=id=>document.getElementById(id);
 function syncLockLabels(){const o=el('lock-our-name'),p=el('lock-opp-name');if(o)o.textContent=state.our.name||'Blue';if(p)p.textContent=state.opp.name||'Red';}
-function stickyName(n){return String(n||'').replace(/\s+team$/i,'').trim()||n;}   // compact name for the slim sticky bar
+function stickyName(n){return String(n||'').trim().replace(/\s+team$/i,'').trim()||n;}   // compact name for the slim sticky bar
 function syncLockUI(){['our','opp'].forEach(s=>{const b=el(s==='our'?'opt-our':'opt-opp');if(!b)return;const locked=sideLocked(s);b.disabled=locked;b.classList.toggle('is-locked',locked);b.title=locked?'This team is locked — untick its lock by the scenario picker to optimise.':'';});}
 function renderAll(){renderRoster('our');renderRoster('opp');renderLineup('our');renderLineup('opp');renderPoints();renderResults();syncLockLabels();syncLockUI();}
 
@@ -715,10 +715,10 @@ function renderLineup(side){
       ${nsBanner}
       <div class="pool"><span class="pool-label">Bench</span>${poolChips}</div>
       ${cards}
-      <div class="lineup-actions">
+      ${sideLocked(side)?'':`<div class="lineup-actions">
         <button class="btn btn-sm" data-act="add-team" data-side="${side}">+ Add team</button>
         <button class="btn btn-sm ghost" data-act="clear-lineup" data-side="${side}">Clear</button>
-      </div>
+      </div>`}
     </div>`;
 }
 
@@ -918,7 +918,9 @@ document.addEventListener('change',e=>{
   if(t.dataset.act==='toggle-lock'){const team=findTeam(side,+t.dataset.team);if(team){team.lock=t.checked;renderLineup(side);renderResults();}return;}
   if(t.dataset.act==='edit-total'){editTeamTotal(side,+t.dataset.team,t.value);return;}
   if(t.dataset.act==='edit-leg'){editMemberLeg(side,+t.dataset.id,t.value);return;}
-  if(t.classList.contains('r-ns')){const r=runnerById(side,+t.dataset.id);if(r){r.ns=t.checked;
+  if(t.classList.contains('r-ns')){const r=runnerById(side,+t.dataset.id);if(r){
+    if(t.checked && state[side].teams.some(tm=>tm.lock&&tm.memberIds.includes(r.id))){t.checked=false;el('optnote').textContent='Unlock that runner’s team before marking a no-show.';return;}  // a locked team keeps its runners
+    r.ns=t.checked;
     if(r.ns){state[side].teams.forEach(tm=>{tm.memberIds=tm.memberIds.filter(x=>x!==r.id);if(tm.leg1Id===r.id)tm.leg1Id=null;});}  // a no-show runner leaves the lineup
     renderRoster(side);renderLineup(side);renderResults();}return;}
 });
@@ -929,7 +931,7 @@ document.addEventListener('click',e=>{
   if(act==='pool-add'){addToBestSpot(side,+b.dataset.id);return;}
   if(act==='member-remove'){const tm=state[side].teams.find(t=>t.memberIds.includes(+b.dataset.id));if(tm&&tm.lock)return;removeMember(side,+b.dataset.id);return;}   // can't remove from a locked team
   if(act==='del-team'){const tm=findTeam(side,+b.dataset.team);if(tm&&tm.lock)return;state[side].teams=state[side].teams.filter(t=>t.id!==+b.dataset.team);renderLineup(side);renderResults();return;}   // can't delete a locked team
-  if(act==='add-team'){state[side].teams.push({id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false,lock:false});renderLineup(side);renderResults();return;}
+  if(act==='add-team'){if(sideLocked(side))return;state[side].teams.push({id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false,lock:false});renderLineup(side);renderResults();return;}
   if(act==='clear-lineup'){state[side].teams=state[side].teams.filter(t=>t.lock);renderLineup(side);renderResults();el('optnote').textContent='';return;}   // keep locked teams
   if(act==='optimize'){optimize(side);return;}
   if(act==='add-runner'){state[side].runners.push({id:++uid,name:'New',pace:'5:00',actSec:null,ns:false});renderRoster(side);renderLineup(side);renderResults();return;}
@@ -946,6 +948,7 @@ function addMember(side,teamId,runnerId){
   renderLineup(side);renderResults();
 }
 function addToBestSpot(side,runnerId){
+  if(sideLocked(side))return;   // the whole side is pinned — don't grow it from the bench
   // add to the first unlocked team with < 2 members, else make a new team
   let t=state[side].teams.find(t=>t.memberIds.length<2 && !t.dnf && !t.lock);
   if(!t){t={id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false,lock:false};state[side].teams.push(t);}
@@ -956,6 +959,7 @@ function removeMember(side,runnerId){
   renderLineup(side);renderResults();
 }
 function delRunner(side,id){
+  if(state[side].teams.some(t=>t.lock&&t.memberIds.includes(id))){el('optnote').textContent='Unlock that runner’s team before deleting them.';return;}  // can't delete a runner who is on a locked team
   state[side].runners=state[side].runners.filter(r=>r.id!==id);
   state[side].teams.forEach(t=>{t.memberIds=t.memberIds.filter(x=>x!==id);if(t.leg1Id===id)t.leg1Id=null;});
   renderRoster(side);renderLineup(side);renderResults();
@@ -965,10 +969,12 @@ function delRunner(side,id){
 el('preset').innerHTML=PRESETS.map((p,i)=>`<option value="${i}">${p.label}</option>`).join('');
 el('preset').addEventListener('change',e=>applyPreset(PRESETS[+e.target.value]));
 el('reset').addEventListener('click',()=>{el('lock-our').checked=false;el('lock-opp').checked=false;el('preset').value='0';applyPreset(PRESETS[0]);});
-// master team-lock: ticks/unticks every small-team lock on that side, disables its optimise, and pins it across scenarios
+// master team-lock: ticks/unticks every small-team lock on that side, disables its optimise, and pins it across scenarios.
+// Individual small-team locks set before the master goes on are remembered (t._ulock) and restored when it goes off.
 ['lock-our','lock-opp'].forEach(id=>el(id).addEventListener('change',e=>{
   const side=id==='lock-our'?'our':'opp';
-  state[side].teams.forEach(t=>t.lock=e.target.checked);
+  if(e.target.checked) state[side].teams.forEach(t=>{t._ulock=!!t.lock;t.lock=true;});
+  else state[side].teams.forEach(t=>{t.lock=('_ulock'in t)?t._ulock:false;delete t._ulock;});
   syncLockUI();renderLineup(side);renderResults();
 }));
 // reuse the header logo bitmap in the sticky bar (no second copy of the data URI)
