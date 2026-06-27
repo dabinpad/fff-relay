@@ -57,8 +57,18 @@
   .sc.opp .sc-info{text-align:right}
   .sc .sub{font-family:var(--mono);font-size:11.5px;font-weight:500;color:var(--ink-2);white-space:nowrap}
   .ptsbox{display:flex;align-items:baseline;gap:7px}
-  .winp-inline{font-family:var(--disp);font-weight:800;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .sc.our .winp-inline{color:var(--our)} .sc.opp .winp-inline{color:var(--opp)}
+  /* branded result header (shareable screencap) */
+  .result-brand{display:flex;align-items:center;justify-content:center;gap:12px;padding:2px 4px;margin:2px 0 12px}
+  .result-brand .rb-logo{height:36px;width:auto;flex:none}
+  .rb-title{font-family:var(--disp);font-weight:800;font-size:20px;letter-spacing:.004em;color:var(--brand);line-height:1.05}
+  .rb-title .rb-yr{color:var(--gray);font-weight:700}
+  /* race-day win chance row (moved out of the big score cards) */
+  .winrow{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;margin:-4px 0 16px}
+  .winrow.hidden{display:none}
+  .wr-cap{font-family:var(--disp);font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+  .winrow .wr{font-family:var(--disp);font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;padding:2px 10px;border-radius:999px;min-width:42px;text-align:center}
+  .winrow .wr.our{color:var(--our-d);background:var(--our-bg)} .winrow .wr.opp{color:var(--opp-d);background:var(--opp-bg)}
+  .wr-sep{font-family:var(--disp);font-size:12px;font-weight:700;color:#9aa6bb}
   .sc.opp{flex-direction:row-reverse}
   .sc .pts{font-family:var(--disp);font-weight:800;font-size:38px;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink)}
   .sc.our .pts{color:var(--our-d)} .sc.opp .pts{color:var(--opp-d)}
@@ -97,8 +107,6 @@
   .lockchk:hover{border-color:#b9c2d2;background:#fff}
   .lockchk input{width:16px;height:16px;cursor:pointer;margin:0}
   .lockchk.our input{accent-color:var(--our)} .lockchk.opp input{accent-color:var(--opp)}
-  .lockchk .lk-dot{width:9px;height:9px;border-radius:50%;flex:none}
-  .lockchk.our .lk-dot{background:var(--our)} .lockchk.opp .lk-dot{background:var(--opp)}
   .lockchk.our:has(input:checked){border-color:var(--our);background:var(--our-bg);color:var(--our-d)}
   .lockchk.opp:has(input:checked){border-color:var(--opp);background:var(--opp-bg);color:var(--opp-d)}
   .lockhint{font-size:12.5px;color:var(--ink-2);margin:-4px 0 14px;line-height:1.4}
@@ -249,10 +257,11 @@
     .sc{flex-direction:column-reverse;align-items:flex-start;gap:2px;padding:9px 12px}
     .sc.opp{flex-direction:column-reverse;align-items:flex-end}
     .sc .lab{font-size:13px} .sc .pts{font-size:30px;line-height:1}
-    /* full-width controls */
+    /* label on its own line; dropdown + Reset share the next line */
     .toolbar{margin:12px 0 4px;gap:8px}
-    .toolbar select{min-width:0;flex:1 1 100%;width:100%}
-    .toolbar .btn{flex:1 1 auto;text-align:center}
+    .toolbar label{flex:1 1 100%}
+    .toolbar select{min-width:0;flex:1 1 0;width:auto}
+    .toolbar .btn{flex:0 0 auto;text-align:center;white-space:nowrap}
     /* team controls: keep blue left / red right, optimize label + note below */
     .teamctrl{grid-template-columns:1fr 1fr;grid-template-areas:"our opp" "mid mid";gap:9px 10px;padding:12px}
     .tc-col.our{grid-area:our} .tc-col.opp{grid-area:opp} .tc-mid{grid-area:mid}
@@ -324,7 +333,7 @@
     <!-- Team controls: lock + optimize, blue (left) vs red (right) — matches the scoreboard -->
     <div class="teamctrl">
       <div class="tc-col our">
-        <label class="lockchk our" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-our"><span class="lk-dot"></span><span class="lk-txt">🔒 Lock <span id="lock-our-name">Blue</span></span></label>
+        <label class="lockchk our" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-our"><span class="lk-txt">🔒 Lock <span id="lock-our-name">Blue</span></span></label>
         <button class="optbtn our" id="opt-our" data-act="optimize" data-side="our">Best Blue lineup</button>
       </div>
       <div class="tc-mid">
@@ -332,17 +341,29 @@
         <div class="optbar-note" id="optnote"></div>
       </div>
       <div class="tc-col opp">
-        <label class="lockchk opp" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-opp"><span class="lk-dot"></span><span class="lk-txt">🔒 Lock <span id="lock-opp-name">Red</span></span></label>
+        <label class="lockchk opp" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-opp"><span class="lk-txt">🔒 Lock <span id="lock-opp-name">Red</span></span></label>
         <button class="optbtn opp" id="opt-opp" data-act="optimize" data-side="opp">Best Red lineup</button>
       </div>
     </div>
     <div class="lockhint" id="lockhint">Lock a team to pin its lineup — times stay editable, but runners can't be added or removed. Switching scenarios then only changes the other team, so you can compare your locked team against each opponent combo.</div>
 
     <!-- Final score -->
+    <!-- branded result header so a screenshot of the result captures the game name + logo -->
+    <div class="result-brand">
+      <img class="rb-logo" id="rb-logo" alt="" aria-hidden="true">
+      <span class="rb-title">FFF Don't Hide Legend Cup <span class="rb-yr">2026</span></span>
+    </div>
+
     <div class="scorestrip">
-      <div class="sc our"><div class="sc-info"><span class="lab" id="sc-our-name">TT &amp; SLK team</span><span class="sub" id="sc-our-time">—</span></div><div class="ptsbox"><span class="pts" id="sc-our">–</span><span class="winp-inline" id="sc-our-win" title="Win chance vs the opponent lineup on the board, over many races with ±10 s/km day-to-day pace variation."></span></div></div>
+      <div class="sc our"><div class="sc-info"><span class="lab" id="sc-our-name">TT &amp; SLK team</span><span class="sub" id="sc-our-time">—</span></div><div class="ptsbox"><span class="pts" id="sc-our">–</span></div></div>
       <div class="midv"><span class="vs">VS</span><span class="verdict none" id="verdict">set lineups</span></div>
-      <div class="sc opp"><div class="sc-info"><span class="lab" id="sc-opp-name">CM &amp; SIN team</span><span class="sub" id="sc-opp-time">—</span></div><div class="ptsbox"><span class="pts" id="sc-opp">–</span><span class="winp-inline" id="sc-opp-win" title="Win chance vs the opponent lineup on the board, over many races with ±10 s/km day-to-day pace variation."></span></div></div>
+      <div class="sc opp"><div class="sc-info"><span class="lab" id="sc-opp-name">CM &amp; SIN team</span><span class="sub" id="sc-opp-time">—</span></div><div class="ptsbox"><span class="pts" id="sc-opp">–</span></div></div>
+    </div>
+    <div class="winrow" id="winrow" title="Race-day Monte-Carlo win chance vs the opponent lineup on the board — many races, each leg jittered ±10 s/km.">
+      <span class="wr-cap">Race-day win chance</span>
+      <span class="wr our" id="wr-our">—</span>
+      <span class="wr-sep">vs</span>
+      <span class="wr opp" id="wr-opp">—</span>
     </div>
 
     <!-- Finish board -->
@@ -613,7 +634,7 @@ function applyPreset(p){
 
 /* =================== RENDER =================== */
 const el=id=>document.getElementById(id);
-function syncLockLabels(){const o=el('lock-our-name'),p=el('lock-opp-name');if(o)o.textContent=state.our.name||'Blue';if(p)p.textContent=state.opp.name||'Red';}
+function syncLockLabels(){const o=el('lock-our-name'),p=el('lock-opp-name');if(o)o.textContent='Blue';if(p)p.textContent='Red';}   // short, colour-coded labels (not the full team name)
 function stickyName(n){return String(n||'').trim().replace(/\s+team$/i,'').trim()||n;}   // compact name for the slim sticky bar
 function syncLockUI(){['our','opp'].forEach(s=>{const b=el(s==='our'?'opt-our':'opt-opp');if(!b)return;const locked=sideLocked(s);b.disabled=locked;b.classList.toggle('is-locked',locked);b.title=locked?'This team is locked — untick its lock by the scenario picker to optimise.':'';});}
 function renderAll(){renderRoster('our');renderRoster('opp');renderLineup('our');renderLineup('opp');renderPoints();renderResults();syncLockLabels();syncLockUI();}
@@ -745,16 +766,16 @@ function renderResults(){
   if(sbon)sbon.textContent=stickyName(state.our.name);
   if(sbpn)sbpn.textContent=stickyName(state.opp.name);
 
-  // board win % (deferred so typing/dragging stays snappy)
-  const tok=++winTok, swin=el('sc-our-win'), spwin=el('sc-opp-win');
+  // race-day win % (deferred so typing/dragging stays snappy) — shown in its own row under the scores
+  const tok=++winTok, swin=el('wr-our'), spwin=el('wr-opp'), wrow=el('winrow');
   const playable=res.rows.some(r=>r.side==='our')&&res.rows.some(r=>r.side==='opp');
-  if(swin&&!playable){swin.textContent='';spwin.textContent='';}
+  if(wrow)wrow.classList.toggle('hidden',!playable);
   if(playable){
-    if(swin)swin.textContent='…';
+    if(swin)swin.textContent='…'; if(spwin)spwin.textContent='…';
     setTimeout(()=>{
       if(tok!==winTok) return;                       // a newer render superseded this
       const wp=winProbBoard(2000);
-      if(wp){ if(swin)swin.textContent='win '+Math.round(wp.our*100)+'%'; if(spwin)spwin.textContent='win '+Math.round(wp.opp*100)+'%'; }
+      if(wp){ if(swin)swin.textContent=Math.round(wp.our*100)+'%'; if(spwin)spwin.textContent=Math.round(wp.opp*100)+'%'; }
     },0);
   }
 
@@ -978,7 +999,7 @@ el('reset').addEventListener('click',()=>{el('lock-our').checked=false;el('lock-
   syncLockUI();renderLineup(side);renderResults();
 }));
 // reuse the header logo bitmap in the sticky bar (no second copy of the data URI)
-(function(){const src=document.querySelector('.brand .logo');const dst=el('sb-logo');if(src&&dst)dst.src=src.src;})();
+(function(){const src=document.querySelector('.brand .logo');if(!src)return;['sb-logo','rb-logo'].forEach(id=>{const d=el(id);if(d)d.src=src.src;});})();
 
 state=freshState();
 applyPreset(PRESETS[0]);
