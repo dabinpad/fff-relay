@@ -126,6 +126,7 @@
   .pool .empty{color:#9aa6bb;font-size:13px;font-style:italic}
 
   .tcard{border:1px solid var(--line);border-radius:11px;margin-bottom:9px;overflow:hidden}
+  .tcard.locked{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
   .tcard.dnf{opacity:.72}
   .tcard-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;background:var(--surface-2);border-bottom:1px solid var(--line-2)}
   .tcard-name{font-family:var(--disp);font-weight:700;font-size:13.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
@@ -314,6 +315,8 @@
           &nbsp;&nbsp;• <strong>Solo</strong> (1 runner) runs the full 10 km = <code>2 × 5K</code>.<br>
           &nbsp;&nbsp;• <strong>10K trio</strong> (2 runners) — the chosen 10K runner runs both legs, the partner runs leg 2 only (buried at half credit): <code>5K_runner + (5K_runner + 5K_partner)/2</code>.<br>
           <strong>DNF</strong> (toggle on a team) is placed last for 0 pts and takes an extra <code>−5</code>.<br>
+          <strong>10K override</strong> — set a per-runner 10 km time in the roster (blank ⇒ 10K = 2×5K, no fatigue). A 10K runner's first 5K = his fresh 5K, his second 5K = (10K − 5K).<br>
+          <strong>Lock</strong> (toggle on a team) — the optimiser keeps that exact team fixed; lock the no-show team to pin who runs the 10K, then optimise the rest.<br>
           <strong>Tie on points</strong> → the team with the faster combined time wins.
         </div>
       </div>
@@ -343,6 +346,8 @@
 function paceToSec(str){const m=String(str).trim().match(/^(\d+):(\d{1,2}(?:\.\d+)?)$/);if(!m)return null;return parseInt(m[1])*60+parseFloat(m[2]);}
 function secToPace(s){if(s==null)return '';const m=Math.floor(s/60);const sec=s%60;return m+':'+(Number.isInteger(sec)?String(sec).padStart(2,'0'):sec.toFixed(1).padStart(4,'0'));}
 function fiveK(p){return p*5;}
+// 10K seconds for a runner: explicit override (min:sec) if valid, else the no-fatigue 2×5K default.
+function tenKsec(r){const o=paceToSec(r&&r.tenk);if(o!=null)return o;const p=paceToSec(r&&r.pace);return p!=null?2*fiveK(p):199998;}
 function fmtTime(s){if(!isFinite(s))return 'DNF';s=Math.round(s);const m=Math.floor(s/60);const sec=s%60;return m+':'+String(sec).padStart(2,'0');}
 function fmtTotal(s){if(!isFinite(s)||s===0)return '—';s=Math.round(s);const h=Math.floor(s/3600);const m=Math.floor((s%3600)/60);const sec=s%60;return (h>0?h+':':'')+(h>0?String(m).padStart(2,'0'):m)+':'+String(sec).padStart(2,'0');}
 
@@ -350,15 +355,17 @@ function teamTime(members, leg1Id, dnf, noshow){
   if(dnf) return {t:Infinity,type:'dnf'};
   const m=members;
   if(m.length===0) return {t:null,type:'empty'};
-  if(m.length===1) return {t:2*fiveK(m[0].p),type:'solo'};            // lone runner = 10K solo (no-show)
+  if(m.length===1) return {t:(m[0].k!=null?m[0].k:2*fiveK(m[0].p)),type:'solo'};  // lone runner = 10K (override or 2×5K)
   if(m.length===2){
     if(noshow){
       // no-show team: one runner does the full 10K *inside a trio*; the partner runs leg 2 only
-      // (half credit). 10K runner = leg1 (defaults to the faster of the two). No fatigue model —
-      // both of the 10K runner's legs count as his 5K, consistent with the solo = 2×5K convention.
+      // (half credit). 10K runner = leg1 (defaults to the faster of the two). His first 5K = his
+      // fresh 5K, his second 5K = (10K − 5K), so a per-runner 10K override (with fatigue) flows
+      // through; with no override 10K = 2×5K and this reduces to 1.5·5K_r + 0.5·5K_partner.
       let r=m.find(x=>x.id===leg1Id); if(!r) r=m.slice().sort((a,b)=>a.p-b.p)[0];
       const other=m.find(x=>x!==r);
-      return {t:fiveK(r.p)+(fiveK(r.p)+fiveK(other.p))/2,type:'trio10k'};
+      const rk=(r.k!=null?r.k:2*fiveK(r.p)), leg1=fiveK(r.p), leg2=rk-leg1;
+      return {t:leg1+(leg2+fiveK(other.p))/2,type:'trio10k'};
     }
     return {t:fiveK(m[0].p)+fiveK(m[1].p),type:'pair'};
   }
@@ -419,10 +426,10 @@ let state;
 
 function freshState(){
   uid=0;
-  const mk=side=>({name:DEFAULTS[side].name,runners:DEFAULTS[side].runners.map(([n,p])=>({id:++uid,name:n,pace:p})),teams:[]});
+  const mk=side=>({name:DEFAULTS[side].name,runners:DEFAULTS[side].runners.map(([n,p])=>({id:++uid,name:n,pace:p,tenk:''})),teams:[]});
   return {our:mk('our'),opp:mk('opp'),points:[13,11,10,9,8,7,6,5,4,3,2,0]};
 }
-function resolve(side,id){const r=state[side].runners.find(x=>x.id===id);if(!r)return null;return {id:r.id,name:r.name,p:paceToSec(r.pace)??99999};}
+function resolve(side,id){const r=state[side].runners.find(x=>x.id===id);if(!r)return null;return {id:r.id,name:r.name,p:paceToSec(r.pace)??99999,k:tenKsec(r)};}
 function runnerById(side,id){return state[side].runners.find(x=>x.id===id);}
 function assignedIds(side){const s=new Set();state[side].teams.forEach(t=>t.memberIds.forEach(id=>s.add(id)));return s;}
 function unassigned(side){const a=assignedIds(side);return state[side].runners.filter(r=>!a.has(r.id));}
@@ -433,7 +440,7 @@ function lineupFromNames(side,groups){
     const ids=names.map(n=>{const r=state[side].runners.find(x=>x.name===n);return r?r.id:null;}).filter(Boolean);
     let leg1=null;
     if(ids.length>=3){const sorted=ids.slice().sort((a,b)=>(paceToSec(runnerById(side,a).pace))-(paceToSec(runnerById(side,b).pace)));leg1=sorted[0];}
-    return {id:++uid,memberIds:ids,leg1Id:leg1,dnf:false,noshow:false};
+    return {id:++uid,memberIds:ids,leg1Id:leg1,dnf:false,noshow:false,lock:false};
   });
 }
 
@@ -472,6 +479,7 @@ function renderRoster(side){
       <td><input class="r-name" value="${escapeAttr(r.name)}" data-side="${side}" data-id="${r.id}" aria-label="runner name"></td>
       <td class="num"><input class="r-pace" value="${escapeAttr(r.pace)}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="pace per km"></td>
       <td class="num"><span class="fivek" id="fivek-${r.id}">${fmtTime(fiveK(paceToSec(r.pace)??0))}</span></td>
+      <td class="num"><input class="r-pace r-tenk" id="tenk-${r.id}" value="${escapeAttr(r.tenk||'')}" data-side="${side}" data-id="${r.id}" inputmode="numeric" placeholder="${fmtTime(2*fiveK(paceToSec(r.pace)??0))}" aria-label="10K time override (min:sec)"></td>
       <td class="num"><button class="x" data-act="del-runner" data-side="${side}" data-id="${r.id}" title="remove">×</button></td>
     </tr>`).join('');
   el('roster-'+side).innerHTML=`
@@ -481,7 +489,7 @@ function renderRoster(side){
     </div>
     <div class="panel-body">
       <table class="roster">
-        <thead><tr><th>Runner</th><th class="num">Pace /km</th><th class="num">5K</th><th class="num"></th></tr></thead>
+        <thead><tr><th>Runner</th><th class="num">Pace /km</th><th class="num">5K</th><th class="num">10K</th><th class="num"></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <div class="add-runner"><button class="btn btn-sm" data-act="add-runner" data-side="${side}">+ Add runner</button></div>
@@ -521,9 +529,9 @@ function renderLineup(side){
     else if(ty==='dnf')badge='<span class="badge dnf">DNF</span>';
     else if(ty==='empty')note='<div class="note">add 2 runners (or 3 for a trio)</div>';
     return `
-    <div class="tcard ${t.dnf?'dnf':''}">
+    <div class="tcard ${t.dnf?'dnf':''} ${t.lock?'locked':''}">
       <div class="tcard-top">
-        <span class="tcard-name">Team ${idx+1}</span>
+        <span class="tcard-name">${t.lock?'🔒 ':''}Team ${idx+1}</span>
         <span style="display:flex;align-items:center;gap:8px">
           ${badge}
           <span class="tcard-time">${tt.t==null?'—':fmtTime(tt.t)}</span>
@@ -535,6 +543,7 @@ function renderLineup(side){
         <span class="ctrls" style="margin-left:auto">
           ${leg1Ctrl}
           ${(members.length===1||members.length===2)?`<label class="dnfbox" title="no-show: runs 10K, −5 and capped at 6 pts"><input type="checkbox" data-act="toggle-noshow" data-side="${side}" data-team="${t.id}" ${(t.noshow||members.length===1)?'checked':''} ${members.length===1?'disabled':''}> no-show</label>`:''}
+          ${members.length>=1?`<label class="dnfbox" title="lock — the optimiser keeps this exact team (use it to pin the 10K runner)"><input type="checkbox" data-act="toggle-lock" data-side="${side}" data-team="${t.id}" ${t.lock?'checked':''}> lock</label>`:''}
           <label class="dnfbox"><input type="checkbox" data-act="toggle-dnf" data-side="${side}" data-team="${t.id}" ${t.dnf?'checked':''}> DNF</label>
         </span>
       </div>
@@ -648,22 +657,31 @@ function optimize(side){
   const other=side==='our'?'opp':'our';
   const oppTimes=fixedTimes(other);
   if(oppTimes.length===0){el('optnote').textContent='Set the other team’s lineup first.';return;}
-  const ids=state[side].runners.map(r=>r.id);
   const paceOf=id=>paceToSec(runnerById(side,id).pace)??99999;
   const f=id=>fiveK(paceOf(id));
-  // keep whatever no-show structure is currently on the board (1 = solo, 2 = 10K trio) and
-  // optimise the assignment around it; with no no-show flagged this is the original behaviour.
-  const nsSizes=state[side].teams.filter(t=>t.noshow&&!t.dnf&&(t.memberIds.length===1||t.memberIds.length===2)).map(t=>t.memberIds.length);
+  const kOf=id=>tenKsec(runnerById(side,id));
+  // locked teams are kept exactly as-is: their runners leave the pool and their (capped) times
+  // stay in the ranking. Lock the no-show team to pin who runs the 10K before optimising.
+  const lockedTeams=state[side].teams.filter(t=>t.lock&&t.memberIds.length>0);
+  const lockedIds=new Set(); lockedTeams.forEach(t=>t.memberIds.forEach(id=>lockedIds.add(id)));
+  const lockedTimes=lockedTeams.map(t=>{
+    const mem=t.memberIds.map(id=>resolve(side,id)).filter(Boolean);
+    const tt=teamTime(mem,t.leg1Id,t.dnf,t.noshow);
+    return {t:tt.t,capped:(tt.type==='solo'||tt.type==='trio10k')};
+  }).filter(x=>x.t!=null&&isFinite(x.t));
+  const ids=state[side].runners.map(r=>r.id).filter(id=>!lockedIds.has(id));
+  // no-show structure among the UNLOCKED teams (a locked no-show is already fixed above)
+  const nsSizes=state[side].teams.filter(t=>!t.lock&&t.noshow&&!t.dnf&&(t.memberIds.length===1||t.memberIds.length===2)).map(t=>t.memberIds.length);
   const note=el('optnote'); note.textContent='Optimizing…';
   const timeOf=ts=>{
     if(ts.kind==='pair')   return {t:f(ts.ids[0])+f(ts.ids[1]),capped:false};
     if(ts.kind==='trio'){const ps=ts.ids.map(paceOf).sort((a,b)=>a-b);return {t:fiveK(ps[0])+(fiveK(ps[1])+fiveK(ps[2]))/2,capped:false};}
-    if(ts.kind==='solo')   return {t:2*f(ts.ids[0]),capped:true};
-    const r=ts.leg1,o=ts.ids.find(x=>x!==r);return {t:f(r)+(f(r)+f(o))/2,capped:true}; // trio10k
+    if(ts.kind==='solo')   return {t:kOf(ts.ids[0]),capped:true};                       // 10K override or 2×5K
+    const r=ts.leg1,o=ts.ids.find(x=>x!==r);return {t:f(r)+((kOf(r)-f(r))+f(o))/2,capped:true}; // trio10k
   };
   setTimeout(()=>{
     let best=-1e9,bestStruct=null;
-    const consider=groups=>{const sc=scoreCapped(groups.map(timeOf),oppTimes);if(sc>best){best=sc;bestStruct=groups.map(g=>({...g,ids:g.ids.slice()}));}};
+    const consider=groups=>{const my=lockedTimes.concat(groups.map(timeOf));const sc=scoreCapped(my,oppTimes);if(sc>best){best=sc;bestStruct=groups.map(g=>({...g,ids:g.ids.slice()}));}};
     if(nsSizes.length===1 && nsSizes[0]===1){                       // 1 solo + (trio/pairs) on the rest
       for(const s of ids){const rest=ids.filter(x=>x!==s);for(const g of partsPairsTrio(rest)) consider([{ids:[s],kind:'solo'},...g]);}
     }else if(nsSizes.length===1 && nsSizes[0]===2){                 // 1 ten-K trio + pairs on the rest
@@ -671,19 +689,21 @@ function optimize(side){
         const a=ids[i],b=ids[j],r=paceOf(a)<=paceOf(b)?a:b;const rest=ids.filter(x=>x!==a&&x!==b);
         for(const g of partsPairsTrio(rest)) consider([{ids:[a,b],kind:'trio10k',leg1:r},...g]);
       }
-    }else{                                                          // no no-show: plain pairs (+trio if odd)
+    }else{                                                          // no (unlocked) no-show: plain pairs (+trio if odd)
       for(const g of partsPairsTrio(ids)) consider(g);
     }
     if(bestStruct){
-      state[side].teams=bestStruct.map(g=>{
+      const freeTeams=bestStruct.map(g=>{
         let leg1=null,noshow=false;
         if(g.kind==='trio') leg1=g.ids.slice().sort((x,y)=>paceOf(x)-paceOf(y))[0];
         if(g.kind==='trio10k'){leg1=g.leg1;noshow=true;}
         if(g.kind==='solo') noshow=true;
-        return {id:++uid,memberIds:g.ids,leg1Id:leg1,dnf:false,noshow};
+        return {id:++uid,memberIds:g.ids,leg1Id:leg1,dnf:false,noshow,lock:false};
       });
+      state[side].teams=lockedTeams.concat(freeTeams);             // keep locked teams, append the optimised ones
       renderLineup(side);renderResults();
-      el('optnote').textContent=`Loaded the best ${side==='our'?'Blue':'Red'} lineup${nsSizes.length?' (no-show kept)':''} → ${trim(best)} pts for that team.`;
+      const bits=[]; if(lockedTeams.length)bits.push(lockedTeams.length+' locked'); if(nsSizes.length)bits.push('no-show kept');
+      el('optnote').textContent=`Loaded the best ${side==='our'?'Blue':'Red'} lineup${bits.length?' ('+bits.join(', ')+')':''} → ${trim(best)} pts.`;
     }else{note.textContent='could not optimize';}
   },20);
 }
@@ -700,9 +720,14 @@ document.addEventListener('input',e=>{
     const r=runnerById(t.dataset.side,+t.dataset.id); if(r){r.name=t.value;} 
     renderLineup('our');renderLineup('opp');renderResults();return;
   }
+  if(t.classList.contains('r-tenk')){   // 10K override (checked before r-pace: the field shares that class for styling)
+    const r=runnerById(t.dataset.side,+t.dataset.id);
+    if(r){r.tenk=t.value;}
+    renderLineup('our');renderLineup('opp');renderResults();return;
+  }
   if(t.classList.contains('r-pace')){
     const r=runnerById(t.dataset.side,+t.dataset.id);
-    if(r){r.pace=t.value;const sec=paceToSec(t.value);el('fivek-'+r.id).textContent=sec==null?'—':fmtTime(fiveK(sec));}
+    if(r){r.pace=t.value;const sec=paceToSec(t.value);el('fivek-'+r.id).textContent=sec==null?'—':fmtTime(fiveK(sec));const tk=el('tenk-'+r.id);if(tk)tk.placeholder=sec==null?'':fmtTime(2*fiveK(sec));}
     renderLineup('our');renderLineup('opp');renderResults();return;
   }
   if(t.classList.contains('tname')){state[t.dataset.side].name=t.value;renderLineup(t.dataset.side);renderResults();return;}
@@ -717,6 +742,7 @@ document.addEventListener('change',e=>{
   if(t.dataset.act==='toggle-noshow'){const team=findTeam(side,+t.dataset.team);if(team){team.noshow=t.checked;
     if(team.noshow && team.memberIds.length===2 && !team.leg1Id){team.leg1Id=team.memberIds.slice().sort((a,b)=>(paceToSec(runnerById(side,a).pace)??0)-(paceToSec(runnerById(side,b).pace)??0))[0];}
     renderLineup(side);renderResults();}return;}
+  if(t.dataset.act==='toggle-lock'){const team=findTeam(side,+t.dataset.team);if(team){team.lock=t.checked;renderLineup(side);renderResults();}return;}
 });
 
 document.addEventListener('click',e=>{
@@ -725,10 +751,10 @@ document.addEventListener('click',e=>{
   if(act==='pool-add'){addToBestSpot(side,+b.dataset.id);return;}
   if(act==='member-remove'){removeMember(side,+b.dataset.id);return;}
   if(act==='del-team'){state[side].teams=state[side].teams.filter(t=>t.id!==+b.dataset.team);renderLineup(side);renderResults();return;}
-  if(act==='add-team'){state[side].teams.push({id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false});renderLineup(side);renderResults();return;}
+  if(act==='add-team'){state[side].teams.push({id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false,lock:false});renderLineup(side);renderResults();return;}
   if(act==='clear-lineup'){state[side].teams=[];renderLineup(side);renderResults();el('optnote').textContent='';return;}
   if(act==='optimize'){optimize(side);return;}
-  if(act==='add-runner'){state[side].runners.push({id:++uid,name:'New',pace:'5:00'});renderRoster(side);renderLineup(side);renderResults();return;}
+  if(act==='add-runner'){state[side].runners.push({id:++uid,name:'New',pace:'5:00',tenk:''});renderRoster(side);renderLineup(side);renderResults();return;}
   if(act==='del-runner'){delRunner(side,+b.dataset.id);return;}
 });
 
@@ -744,7 +770,7 @@ function addMember(side,teamId,runnerId){
 function addToBestSpot(side,runnerId){
   // add to the first team with < 2 members, else make a new team
   let t=state[side].teams.find(t=>t.memberIds.length<2 && !t.dnf);
-  if(!t){t={id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false};state[side].teams.push(t);}
+  if(!t){t={id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false,lock:false};state[side].teams.push(t);}
   addMember(side,t.id,runnerId);
 }
 function removeMember(side,runnerId){
