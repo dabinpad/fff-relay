@@ -599,7 +599,7 @@ function renderResults(){
       <div class="who"><span class="sideflag ${r.side}"></span><span class="names" title="${escapeAttr(names)}">${escapeHtml(names)}</span><span class="tg ${r.side}">${r.side==='our'?'BLUE':'RED'}</span></div>
       <div class="ftime">${fmtTime(r.t)}</div>
       <div class="fbadge">${tyLabel}</div>
-      <div class="fpts">${trim(r.disp)}</div>
+      <div class="fpts"${(r.type==='solo'||r.type==='trio10k')?` title="${trim(r.disp)} pts (capped at 6) − 5 penalty = ${trim(r.contrib)}"`:(r.type==='dnf'?' title="DNF: 0 pts − 5 penalty"':'')}>${trim(r.contrib)}</div>
     </div>`;
   }).join('');
 
