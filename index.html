@@ -448,24 +448,28 @@ function lineupFromNames(side,groups){
 }
 
 const LINEUPS={
-  sweep:[['TT','KK'],['LC','SLK'],['FL','DB'],['LP','LW'],['Ryan','5K'],['Penny','CHT']],
-  barbell:[['LW','TT'],['Ryan','LC'],['LP','FL'],['KK','5K'],['Penny','SLK'],['CHT','DB']],
-  v3counter:[['FL','LC'],['LP','TT'],['KK','Ryan'],['5K','LW'],['Penny','SLK'],['CHT','DB']],
-  oppBalanced:[['Sandro','SIN'],['LWL','CM'],['KTY','9J'],['CL','LS'],['CP','Oyster'],['HT','GoG','AK']],
-  oppSpreadV3:[['SIN','HT'],['CP','LWL'],['CL','Sandro'],['KTY','CM'],['LS','Oyster'],['9J','GoG','AK']],
+  // Red archetypes (5 pairs + 1 trio)
   oppOptimal:[['SIN','CM'],['Sandro','Oyster'],['LWL','LS'],['KTY','9J'],['CL','CP'],['HT','GoG','AK']],
-  oppStacked:[['Sandro','LWL'],['SIN','CM'],['HT','KTY'],['CL','CP'],['Oyster','LS'],['9J','GoG','AK']]
+  oppBalanced:[['Sandro','SIN'],['LWL','CM'],['KTY','9J'],['CL','LS'],['CP','Oyster'],['HT','GoG','AK']],
+  oppSpreadAces:[['Sandro','HT'],['LWL','KTY'],['SIN','CM'],['CL','CP'],['Oyster','LS'],['9J','GoG','AK']],
+  oppStacked:[['Sandro','LWL'],['SIN','CM'],['HT','KTY'],['CL','CP'],['Oyster','LS'],['9J','GoG','AK']],
+  // Blue best responses to each (FF is the no-show; a 1-runner group is the capped 10K solo)
+  blueVsOptimal:[['LW'],['KK','DB','SLK'],['TT','LP'],['LC','FL'],['Ryan','5K'],['Penny','CHT']],
+  blueVsBalanced:[['LW'],['TT','KK','SLK'],['LC','Penny'],['FL','CHT'],['LP','5K'],['Ryan','DB']],
+  blueVsAces:[['LW'],['TT','KK','CHT'],['LC','FL'],['LP','5K'],['Ryan','DB'],['SLK','Penny']],
+  blueVsStacked:[['LP'],['KK','DB','CHT'],['TT','Ryan'],['LC','LW'],['FL','5K'],['SLK','Penny']]
 };
+// FF is the no-show in every scenario; each loads Red's setup + Blue's best response.
 const PRESETS=[
-  {label:'Red spreads its two aces — close loss (39–39)',our:'v3counter',opp:'oppSpreadV3'},
-  {label:'Red plays two strong pairs — Blue wins 40–38',our:'sweep',opp:'oppBalanced'},
-  {label:'Red puts both aces in one pair',our:'sweep',opp:'oppStacked'},
-  {label:'Red’s strongest setup — toughest case',our:'sweep',opp:'oppOptimal'},
-  {label:'Pitfall: Blue stacks its slow runners (32–46)',our:'barbell',opp:'oppBalanced'}
+  {label:'Toughest — Red’s optimal spread (Blue best ≈ 31)',noshow:['FF'],our:'blueVsOptimal',opp:'oppOptimal'},
+  {label:'Red plays two big pairs — Blue’s best shot (35.5)',noshow:['FF'],our:'blueVsBalanced',opp:'oppBalanced'},
+  {label:'Red spreads its 3 aces (33)',noshow:['FF'],our:'blueVsAces',opp:'oppSpreadAces'},
+  {label:'Red stacks both aces in one pair (31.5)',noshow:['FF'],our:'blueVsStacked',opp:'oppStacked'}
 ];
 
 function applyPreset(p){
   state=freshState();
+  (p.noshow||[]).forEach(n=>{const r=state.our.runners.find(x=>x.name===n);if(r)r.ns=true;});
   state.our.teams=lineupFromNames('our',LINEUPS[p.our]);
   state.opp.teams=lineupFromNames('opp',LINEUPS[p.opp]);
   renderAll();
