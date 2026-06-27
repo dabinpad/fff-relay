@@ -310,7 +310,9 @@
         <div class="ptable" id="ptable"></div>
         <div class="legend">
           <strong>Trio</strong> = leg-1 runner (full) + average of the two leg-2 runners → <code>t_leg1 + (a+b)/2</code>. Fastest-on-leg-1 is set by default.<br>
-          <strong>Solo</strong> (1 runner in a team) runs the full 10 km = <code>2 × 5K</code>; result is capped at 6 pts and takes <code>−5</code>.<br>
+          <strong>No-show</strong> (toggle on a 1- or 2-runner team) — the team lost a runner, so it takes <code>−5</code> and is <strong>capped at 6 pts</strong>:<br>
+          &nbsp;&nbsp;• <strong>Solo</strong> (1 runner) runs the full 10 km = <code>2 × 5K</code>.<br>
+          &nbsp;&nbsp;• <strong>10K trio</strong> (2 runners) — the chosen 10K runner runs both legs, the partner runs leg 2 only (buried at half credit): <code>5K_runner + (5K_runner + 5K_partner)/2</code>.<br>
           <strong>DNF</strong> (toggle on a team) is placed last for 0 pts and takes an extra <code>−5</code>.<br>
           <strong>Tie on points</strong> → the team with the faster combined time wins.
         </div>
@@ -328,7 +330,7 @@
 
     <!-- 2 . Team lineups -->
     <section class="stage">
-      <div class="stage-head"><span class="step">2</span><h2>Team lineups</h2><span class="hint">build small teams of 2 (pair) or 3 (trio). 1 runner = solo penalty</span></div>
+      <div class="stage-head"><span class="step">2</span><h2>Team lineups</h2><span class="hint">2 (pair) or 3 (trio); tick <em>no-show</em> for a 10K solo (1) or 10K trio (2) — −5, capped at 6</span></div>
       <div class="two-col">
         <div class="panel our" id="lineup-our"></div>
         <div class="panel opp" id="lineup-opp"></div>
@@ -344,12 +346,22 @@ function fiveK(p){return p*5;}
 function fmtTime(s){if(!isFinite(s))return 'DNF';s=Math.round(s);const m=Math.floor(s/60);const sec=s%60;return m+':'+String(sec).padStart(2,'0');}
 function fmtTotal(s){if(!isFinite(s)||s===0)return '—';s=Math.round(s);const h=Math.floor(s/3600);const m=Math.floor((s%3600)/60);const sec=s%60;return (h>0?h+':':'')+(h>0?String(m).padStart(2,'0'):m)+':'+String(sec).padStart(2,'0');}
 
-function teamTime(members, leg1Id, dnf){
+function teamTime(members, leg1Id, dnf, noshow){
   if(dnf) return {t:Infinity,type:'dnf'};
   const m=members;
   if(m.length===0) return {t:null,type:'empty'};
-  if(m.length===1) return {t:2*fiveK(m[0].p),type:'solo'};
-  if(m.length===2) return {t:fiveK(m[0].p)+fiveK(m[1].p),type:'pair'};
+  if(m.length===1) return {t:2*fiveK(m[0].p),type:'solo'};            // lone runner = 10K solo (no-show)
+  if(m.length===2){
+    if(noshow){
+      // no-show team: one runner does the full 10K *inside a trio*; the partner runs leg 2 only
+      // (half credit). 10K runner = leg1 (defaults to the faster of the two). No fatigue model —
+      // both of the 10K runner's legs count as his 5K, consistent with the solo = 2×5K convention.
+      let r=m.find(x=>x.id===leg1Id); if(!r) r=m.slice().sort((a,b)=>a.p-b.p)[0];
+      const other=m.find(x=>x!==r);
+      return {t:fiveK(r.p)+(fiveK(r.p)+fiveK(other.p))/2,type:'trio10k'};
+    }
+    return {t:fiveK(m[0].p)+fiveK(m[1].p),type:'pair'};
+  }
   let leg1=m.find(x=>x.id===leg1Id);
   if(!leg1) leg1=m.slice().sort((a,b)=>a.p-b.p)[0];
   const others=m.filter(x=>x!==leg1);
@@ -370,7 +382,7 @@ function computeResults(state){
   for(const side of ['our','opp']){
     for(const st of state[side].teams){
       const members=legSorted(st.memberIds.map(id=>resolve(side,id)).filter(Boolean));
-      const tt=teamTime(members,st.leg1Id,st.dnf);
+      const tt=teamTime(members,st.leg1Id,st.dnf,st.noshow);
       if(tt.type==='empty') continue;            // ignore unfinished placeholder teams
       rows.push({side,members,st,...tt});
     }
@@ -385,7 +397,7 @@ function computeResults(state){
   }
   for(const r of rows){
     if(r.type==='dnf'){r.disp=0;r.contrib=-5;}
-    else if(r.type==='solo'){r.disp=Math.min(r.raw,6);r.contrib=r.disp-5;}
+    else if(r.type==='solo'||r.type==='trio10k'){r.disp=Math.min(r.raw,6);r.contrib=r.disp-5;}
     else{r.disp=r.raw;r.contrib=r.raw;}
   }
   const sum=s=>rows.filter(r=>r.side===s).reduce((a,r)=>a+r.contrib,0);
@@ -421,7 +433,7 @@ function lineupFromNames(side,groups){
     const ids=names.map(n=>{const r=state[side].runners.find(x=>x.name===n);return r?r.id:null;}).filter(Boolean);
     let leg1=null;
     if(ids.length>=3){const sorted=ids.slice().sort((a,b)=>(paceToSec(runnerById(side,a).pace))-(paceToSec(runnerById(side,b).pace)));leg1=sorted[0];}
-    return {id:++uid,memberIds:ids,leg1Id:leg1,dnf:false};
+    return {id:++uid,memberIds:ids,leg1Id:leg1,dnf:false,noshow:false};
   });
 }
 
@@ -490,20 +502,22 @@ function renderLineup(side){
 
   const cards=T.teams.map((t,idx)=>{
     const members=t.memberIds.map(id=>resolve(side,id)).filter(Boolean);
-    const tt=teamTime(members,t.leg1Id,t.dnf);
+    const tt=teamTime(members,t.leg1Id,t.dnf,t.noshow);
     const memChips=legSorted(members).map(m=>chip(side,m,false)).join('');
     const addOpts=un.map(r=>`<option value="${r.id}">${escapeHtml(r.name)} (${fmtTime(fiveK(paceToSec(r.pace)??0))})</option>`).join('');
     const addSel=un.length?`<select class="addsel" data-act="member-add" data-side="${side}" data-team="${t.id}" aria-label="add runner to team"><option value="">+ add runner…</option>${addOpts}</select>`:'';
     let leg1Ctrl='';
-    if(members.length>=3 && !t.dnf){
+    if((members.length>=3 || (members.length===2 && t.noshow)) && !t.dnf){
+      const lbl=members.length===2?'10K':'leg 1';
       const opts=members.map(m=>`<option value="${m.id}" ${m.id===(t.leg1Id||members.slice().sort((a,b)=>a.p-b.p)[0].id)?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
-      leg1Ctrl=`<span class="leg1">leg 1 <select data-act="set-leg1" data-side="${side}" data-team="${t.id}">${opts}</select></span>`;
+      leg1Ctrl=`<span class="leg1">${lbl} <select data-act="set-leg1" data-side="${side}" data-team="${t.id}">${opts}</select></span>`;
     }
     let badge='',note='';
     const ty=t.dnf?'dnf':tt.type;
     if(ty==='pair')badge='';
     else if(ty==='trio')badge='<span class="badge trio">trio</span>';
-    else if(ty==='solo'){badge='<span class="badge solo">solo</span>';note='<div class="note warn">solo 10 km — capped at 6 pts, −5 penalty</div>';}
+    else if(ty==='solo'){badge='<span class="badge solo">solo</span>';note='<div class="note warn">no-show: solo 10 km = 2×5K — capped at 6 pts, −5 penalty</div>';}
+    else if(ty==='trio10k'){badge='<span class="badge solo">10K trio</span>';note='<div class="note warn">no-show: 10K runner + buried partner (leg 2) — capped at 6 pts, −5 penalty</div>';}
     else if(ty==='dnf')badge='<span class="badge dnf">DNF</span>';
     else if(ty==='empty')note='<div class="note">add 2 runners (or 3 for a trio)</div>';
     return `
@@ -520,6 +534,7 @@ function renderLineup(side){
         ${memChips}${addSel}
         <span class="ctrls" style="margin-left:auto">
           ${leg1Ctrl}
+          ${(members.length===1||members.length===2)?`<label class="dnfbox" title="no-show: runs 10K, −5 and capped at 6 pts"><input type="checkbox" data-act="toggle-noshow" data-side="${side}" data-team="${t.id}" ${(t.noshow||members.length===1)?'checked':''} ${members.length===1?'disabled':''}> no-show</label>`:''}
           <label class="dnfbox"><input type="checkbox" data-act="toggle-dnf" data-side="${side}" data-team="${t.id}" ${t.dnf?'checked':''}> DNF</label>
         </span>
       </div>
@@ -568,7 +583,7 @@ function renderResults(){
   const rowsHtml=res.rows.map(r=>{
     const names=r.members.map(m=>m.name).join(' + ');
     const medalColor=r.side==='our'?'var(--our)':'var(--opp)';
-    const tyLabel=r.type==='trio'?'trio':r.type==='solo'?'solo':r.type==='dnf'?'DNF':'';
+    const tyLabel=r.type==='trio'?'trio':r.type==='trio10k'?'10K trio':r.type==='solo'?'solo':r.type==='dnf'?'DNF':'';
     return `<div class="frow ${r.side} ${r.position===1?'p1':''}">
       <div class="pos">${r.position}${ord(r.position)}</div>
       <div class="medal" style="background:${r.position===1?'var(--gold)':medalColor}">${r.position}</div>
@@ -596,20 +611,37 @@ function* pairings(arr){           // arr of ids -> arrays of [id,id]
     for(const p of pairings(rest)) yield [[first,arr[i]],...p];
   }
 }
+function* partsPairsTrio(ids){     // partition ids into pairs (+1 trio if the count is odd)
+  if(ids.length%2===0){
+    for(const pr of pairings(ids)) yield pr.map(p=>({ids:p,kind:'pair'}));
+  }else{
+    for(let a=0;a<ids.length;a++)for(let b=a+1;b<ids.length;b++)for(let c=b+1;c<ids.length;c++){
+      const trio=[ids[a],ids[b],ids[c]];
+      const rest=ids.filter((_,k)=>k!==a&&k!==b&&k!==c);
+      for(const pr of pairings(rest)) yield [{ids:trio,kind:'trio'},...pr.map(p=>({ids:p,kind:'pair'}))];
+    }
+  }
+}
 function fixedTimes(side){          // current times of the OTHER side
   const r=[];
   for(const st of state[side].teams){
     const members=st.memberIds.map(id=>resolve(side,id)).filter(Boolean);
-    const tt=teamTime(members,st.leg1Id,st.dnf);
+    const tt=teamTime(members,st.leg1Id,st.dnf,st.noshow);
     if(tt.type==='empty')continue;
     if(isFinite(tt.t)||tt.type==='dnf') r.push(tt.t);
   }
   return r;
 }
-function scoreOf(myTimes,oppTimes){
-  const rows=[...myTimes.map(t=>({t,s:'m'})),...oppTimes.map(t=>({t,s:'o'}))].sort((a,b)=>a.t-b.t);
+// my total points vs fixed opp times, applying the cap+(−5) to any of my teams flagged capped
+function scoreCapped(myTeams,oppTimes){
+  const rows=[...myTeams.map(x=>({t:x.t,s:'m',capped:x.capped})),...oppTimes.map(t=>({t,s:'o',capped:false}))].sort((a,b)=>a.t-b.t);
   let i=0,mp=0;
-  while(i<rows.length){let j=i;while(j<rows.length&&rows[j].t===rows[i].t)j++;let avg=0;for(let k=i;k<j;k++)avg+=(state.points[k]||0);avg/=(j-i);for(let k=i;k<j;k++){if(rows[k].s==='m')mp+=avg;}i=j;}
+  while(i<rows.length){
+    let j=i;while(j<rows.length&&rows[j].t===rows[i].t)j++;
+    let avg=0;for(let k=i;k<j;k++)avg+=(state.points[k]||0);avg/=(j-i);
+    for(let k=i;k<j;k++){if(rows[k].s==='m')mp+=rows[k].capped?(Math.min(avg,6)-5):avg;}
+    i=j;
+  }
   return mp;
 }
 function optimize(side){
@@ -618,41 +650,40 @@ function optimize(side){
   if(oppTimes.length===0){el('optnote').textContent='Set the other team’s lineup first.';return;}
   const ids=state[side].runners.map(r=>r.id);
   const paceOf=id=>paceToSec(runnerById(side,id).pace)??99999;
-  const n=ids.length;
-  let groupings=[]; // array of {groups:[[ids]], times:[...]}
+  const f=id=>fiveK(paceOf(id));
+  // keep whatever no-show structure is currently on the board (1 = solo, 2 = 10K trio) and
+  // optimise the assignment around it; with no no-show flagged this is the original behaviour.
+  const nsSizes=state[side].teams.filter(t=>t.noshow&&!t.dnf&&(t.memberIds.length===1||t.memberIds.length===2)).map(t=>t.memberIds.length);
   const note=el('optnote'); note.textContent='Optimizing…';
-
-  // build candidate partitions
-  function evalGroups(groups){
-    const times=groups.map(g=>{
-      if(g.length===2)return fiveK(paceOf(g[0]))+fiveK(paceOf(g[1]));
-      // trio
-      const ps=g.map(paceOf).sort((a,b)=>a-b);
-      return fiveK(ps[0])+(fiveK(ps[1])+fiveK(ps[2]))/2;
-    });
-    return times;
-  }
-  // we run synchronously after a tick so the "optimizing…" paints
+  const timeOf=ts=>{
+    if(ts.kind==='pair')   return {t:f(ts.ids[0])+f(ts.ids[1]),capped:false};
+    if(ts.kind==='trio'){const ps=ts.ids.map(paceOf).sort((a,b)=>a-b);return {t:fiveK(ps[0])+(fiveK(ps[1])+fiveK(ps[2]))/2,capped:false};}
+    if(ts.kind==='solo')   return {t:2*f(ts.ids[0]),capped:true};
+    const r=ts.leg1,o=ts.ids.find(x=>x!==r);return {t:f(r)+(f(r)+f(o))/2,capped:true}; // trio10k
+  };
   setTimeout(()=>{
-    let best=-1,bestGroups=null;
-    const consider=(groups)=>{const times=evalGroups(groups);const sc=scoreOf(times,oppTimes);if(sc>best){best=sc;bestGroups=groups.map(g=>g.slice());}};
-    if(n%2===0){
-      for(const pr of pairings(ids)) consider(pr);
-    }else{
-      // choose 3 for trio, pair the rest
-      for(let a=0;a<n;a++)for(let b=a+1;b<n;b++)for(let c=b+1;c<n;c++){
-        const trio=[ids[a],ids[b],ids[c]];
-        const rest=ids.filter((_,k)=>k!==a&&k!==b&&k!==c);
-        for(const pr of pairings(rest)) consider([trio,...pr]);
+    let best=-1e9,bestStruct=null;
+    const consider=groups=>{const sc=scoreCapped(groups.map(timeOf),oppTimes);if(sc>best){best=sc;bestStruct=groups.map(g=>({...g,ids:g.ids.slice()}));}};
+    if(nsSizes.length===1 && nsSizes[0]===1){                       // 1 solo + (trio/pairs) on the rest
+      for(const s of ids){const rest=ids.filter(x=>x!==s);for(const g of partsPairsTrio(rest)) consider([{ids:[s],kind:'solo'},...g]);}
+    }else if(nsSizes.length===1 && nsSizes[0]===2){                 // 1 ten-K trio + pairs on the rest
+      for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){
+        const a=ids[i],b=ids[j],r=paceOf(a)<=paceOf(b)?a:b;const rest=ids.filter(x=>x!==a&&x!==b);
+        for(const g of partsPairsTrio(rest)) consider([{ids:[a,b],kind:'trio10k',leg1:r},...g]);
       }
+    }else{                                                          // no no-show: plain pairs (+trio if odd)
+      for(const g of partsPairsTrio(ids)) consider(g);
     }
-    if(bestGroups){
-      state[side].teams=bestGroups.map(g=>{
-        let leg1=null;if(g.length>=3){leg1=g.slice().sort((x,y)=>paceOf(x)-paceOf(y))[0];}
-        return {id:++uid,memberIds:g,leg1Id:leg1,dnf:false};
+    if(bestStruct){
+      state[side].teams=bestStruct.map(g=>{
+        let leg1=null,noshow=false;
+        if(g.kind==='trio') leg1=g.ids.slice().sort((x,y)=>paceOf(x)-paceOf(y))[0];
+        if(g.kind==='trio10k'){leg1=g.leg1;noshow=true;}
+        if(g.kind==='solo') noshow=true;
+        return {id:++uid,memberIds:g.ids,leg1Id:leg1,dnf:false,noshow};
       });
       renderLineup(side);renderResults();
-      el('optnote').textContent=`Loaded the best ${side==='our'?'Blue':'Red'} lineup → ${trim(best)} pts for that team.`;
+      el('optnote').textContent=`Loaded the best ${side==='our'?'Blue':'Red'} lineup${nsSizes.length?' (no-show kept)':''} → ${trim(best)} pts for that team.`;
     }else{note.textContent='could not optimize';}
   },20);
 }
@@ -683,6 +714,9 @@ document.addEventListener('change',e=>{
   if(t.dataset.act==='member-add'){const id=+t.value;if(id){addMember(side,+t.dataset.team,id);}return;}
   if(t.dataset.act==='set-leg1'){const team=findTeam(side,+t.dataset.team);if(team){team.leg1Id=+t.value;renderLineup(side);renderResults();}return;}
   if(t.dataset.act==='toggle-dnf'){const team=findTeam(side,+t.dataset.team);if(team){team.dnf=t.checked;renderLineup(side);renderResults();}return;}
+  if(t.dataset.act==='toggle-noshow'){const team=findTeam(side,+t.dataset.team);if(team){team.noshow=t.checked;
+    if(team.noshow && team.memberIds.length===2 && !team.leg1Id){team.leg1Id=team.memberIds.slice().sort((a,b)=>(paceToSec(runnerById(side,a).pace)??0)-(paceToSec(runnerById(side,b).pace)??0))[0];}
+    renderLineup(side);renderResults();}return;}
 });
 
 document.addEventListener('click',e=>{
@@ -691,7 +725,7 @@ document.addEventListener('click',e=>{
   if(act==='pool-add'){addToBestSpot(side,+b.dataset.id);return;}
   if(act==='member-remove'){removeMember(side,+b.dataset.id);return;}
   if(act==='del-team'){state[side].teams=state[side].teams.filter(t=>t.id!==+b.dataset.team);renderLineup(side);renderResults();return;}
-  if(act==='add-team'){state[side].teams.push({id:++uid,memberIds:[],leg1Id:null,dnf:false});renderLineup(side);renderResults();return;}
+  if(act==='add-team'){state[side].teams.push({id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false});renderLineup(side);renderResults();return;}
   if(act==='clear-lineup'){state[side].teams=[];renderLineup(side);renderResults();el('optnote').textContent='';return;}
   if(act==='optimize'){optimize(side);return;}
   if(act==='add-runner'){state[side].runners.push({id:++uid,name:'New',pace:'5:00'});renderRoster(side);renderLineup(side);renderResults();return;}
@@ -710,7 +744,7 @@ function addMember(side,teamId,runnerId){
 function addToBestSpot(side,runnerId){
   // add to the first team with < 2 members, else make a new team
   let t=state[side].teams.find(t=>t.memberIds.length<2 && !t.dnf);
-  if(!t){t={id:++uid,memberIds:[],leg1Id:null,dnf:false};state[side].teams.push(t);}
+  if(!t){t={id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false};state[side].teams.push(t);}
   addMember(side,t.id,runnerId);
 }
 function removeMember(side,runnerId){
