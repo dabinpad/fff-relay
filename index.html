@@ -109,6 +109,9 @@
   .roster input.r-name:focus,.roster input.r-pace:focus{outline:none;border-color:var(--our);background:#fff}
   .opp .roster input:focus{border-color:var(--opp)}
   .roster .fivek{font-family:var(--mono);font-weight:600;color:var(--ink-2);font-size:13px}
+  .roster tr.nsrow td{opacity:.5} .roster tr.nsrow .r-name{text-decoration:line-through}
+  .nsbox{display:inline-flex;align-items:center;justify-content:center;cursor:pointer} .nsbox input{width:17px;height:17px;accent-color:var(--opp);cursor:pointer}
+  .ns-banner{background:var(--opp-bg);border:1px solid var(--opp);color:var(--opp-d);border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;margin-bottom:10px}
   .x{border:none;background:transparent;color:#aab3c4;cursor:pointer;font-size:16px;line-height:1;padding:4px 6px;border-radius:6px}
   .x:hover{background:#f3eef0;color:var(--opp)}
   .add-runner{margin-top:8px}
@@ -311,12 +314,10 @@
         <div class="ptable" id="ptable"></div>
         <div class="legend">
           <strong>Trio</strong> = leg-1 runner (full) + average of the two leg-2 runners → <code>t_leg1 + (a+b)/2</code>. Fastest-on-leg-1 is set by default.<br>
-          <strong>No-show</strong> (toggle on a 1- or 2-runner team) — the team lost a runner, so it takes <code>−5</code> and is <strong>capped at 6 pts</strong>:<br>
-          &nbsp;&nbsp;• <strong>Solo</strong> (1 runner) runs the full 10 km = <code>2 × 5K</code>.<br>
-          &nbsp;&nbsp;• <strong>10K trio</strong> (2 runners) — the chosen 10K runner runs both legs, the partner runs leg 2 only (buried at half credit): <code>5K_runner + (5K_runner + 5K_partner)/2</code>.<br>
+          <strong>No-show (NS)</strong> — tick <b>NS</b> next to a runner in section&nbsp;1 to mark them absent. They leave the lineup, and the team forfeits a runner: <b>Optimise</b> then fields one <strong>solo</strong> (a teammate runs the full 10 km = <code>2 × 5K</code>) that takes <code>−5</code> and is <strong>capped at 6 pts</strong>. One NS → one capped solo.<br>
           <strong>DNF</strong> (toggle on a team) is placed last for 0 pts and takes an extra <code>−5</code>.<br>
-          <strong>10K override</strong> — set a per-runner 10 km time in the roster (blank ⇒ 10K = 2×5K, no fatigue). A 10K runner's first 5K = his fresh 5K, his second 5K = (10K − 5K).<br>
-          <strong>Lock</strong> (toggle on a team) — the optimiser keeps that exact team fixed; lock the no-show team to pin who runs the 10K, then optimise the rest.<br>
+          <strong>10K override</strong> — set a per-runner 10 km time in the roster (blank ⇒ 10K = 2×5K, no fatigue).<br>
+          <strong>Lock</strong> (toggle on a team) — the optimiser keeps that exact team fixed; e.g. put your chosen 10 km runner alone on a team and lock it, then optimise the rest.<br>
           <strong>Tie on points</strong> → the team with the faster combined time wins.
         </div>
       </div>
@@ -324,7 +325,7 @@
 
     <!-- 1 . Team rosters & pace -->
     <section class="stage">
-      <div class="stage-head"><span class="step">1</span><h2>Team rosters &amp; pace</h2><span class="hint">pace is min:sec per km — 5K time = pace × 5</span></div>
+      <div class="stage-head"><span class="step">1</span><h2>Team rosters &amp; pace</h2><span class="hint">pace is min:sec per km — 5K = pace × 5; optional 10K override; tick <em>NS</em> for a no-show</span></div>
       <div class="two-col">
         <div class="panel our" id="roster-our"></div>
         <div class="panel opp" id="roster-opp"></div>
@@ -333,7 +334,7 @@
 
     <!-- 2 . Team lineups -->
     <section class="stage">
-      <div class="stage-head"><span class="step">2</span><h2>Team lineups</h2><span class="hint">2 (pair) or 3 (trio); tick <em>no-show</em> for a 10K solo (1) or 10K trio (2) — −5, capped at 6</span></div>
+      <div class="stage-head"><span class="step">2</span><h2>Team lineups</h2><span class="hint">build pairs / trios, or hit Optimise. Mark no-shows in section 1 (NS) — one capped 10K solo each</span></div>
       <div class="two-col">
         <div class="panel our" id="lineup-our"></div>
         <div class="panel opp" id="lineup-opp"></div>
@@ -419,20 +420,20 @@ function computeResults(state){
 /* =================== STATE =================== */
 let uid=0;
 const DEFAULTS={
-  our:{name:'Our Team',runners:[['TT','4:00'],['LC','4:10'],['FL','4:10'],['LP','4:45'],['Ryan','4:45'],['LW','5:15'],['5K','5:15'],['KK','5:30'],['SLK','5:30'],['DB','5:30'],['Penny','5:45'],['CHT','6:00']]},
+  our:{name:'Our Team',runners:[['TT','4:00'],['LC','4:10'],['FL','4:10'],['LP','4:45'],['Ryan','4:45'],['LW','5:15'],['5K','5:15'],['KK','5:30'],['DB','5:30'],['SLK','5:45'],['Penny','5:45'],['CHT','6:00'],['FF','6:00']]},
   opp:{name:'Opponent',runners:[['Sandro','4:00'],['LWL','4:00'],['SIN','4:15'],['HT','4:30'],['CM','4:30'],['KTY','4:45'],['CL','5:00'],['CP','5:00'],['Oyster','5:15'],['LS','5:15'],['9J','5:30'],['GoG','5:45'],['AK','6:30']]}
 };
 let state;
 
 function freshState(){
   uid=0;
-  const mk=side=>({name:DEFAULTS[side].name,runners:DEFAULTS[side].runners.map(([n,p])=>({id:++uid,name:n,pace:p,tenk:''})),teams:[]});
+  const mk=side=>({name:DEFAULTS[side].name,runners:DEFAULTS[side].runners.map(([n,p])=>({id:++uid,name:n,pace:p,tenk:'',ns:false})),teams:[]});
   return {our:mk('our'),opp:mk('opp'),points:[13,11,10,9,8,7,6,5,4,3,2,0]};
 }
 function resolve(side,id){const r=state[side].runners.find(x=>x.id===id);if(!r)return null;return {id:r.id,name:r.name,p:paceToSec(r.pace)??99999,k:tenKsec(r)};}
 function runnerById(side,id){return state[side].runners.find(x=>x.id===id);}
 function assignedIds(side){const s=new Set();state[side].teams.forEach(t=>t.memberIds.forEach(id=>s.add(id)));return s;}
-function unassigned(side){const a=assignedIds(side);return state[side].runners.filter(r=>!a.has(r.id));}
+function unassigned(side){const a=assignedIds(side);return state[side].runners.filter(r=>!a.has(r.id)&&!r.ns);}  // no-show runners are out of the pool
 
 /* lineups defined by runner NAME -> applied onto fresh default rosters */
 function lineupFromNames(side,groups){
@@ -475,11 +476,12 @@ function renderAll(){renderRoster('our');renderRoster('opp');renderLineup('our')
 function renderRoster(side){
   const T=state[side];
   const rows=T.runners.map(r=>`
-    <tr data-id="${r.id}">
+    <tr data-id="${r.id}" class="${r.ns?'nsrow':''}">
       <td><input class="r-name" value="${escapeAttr(r.name)}" data-side="${side}" data-id="${r.id}" aria-label="runner name"></td>
       <td class="num"><input class="r-pace" value="${escapeAttr(r.pace)}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="pace per km"></td>
       <td class="num"><span class="fivek" id="fivek-${r.id}">${fmtTime(fiveK(paceToSec(r.pace)??0))}</span></td>
       <td class="num"><input class="r-pace r-tenk" id="tenk-${r.id}" value="${escapeAttr(r.tenk||'')}" data-side="${side}" data-id="${r.id}" inputmode="numeric" placeholder="${fmtTime(2*fiveK(paceToSec(r.pace)??0))}" aria-label="10K time override (min:sec)"></td>
+      <td class="num"><label class="nsbox" title="no-show: this runner is absent. The team forfeits a runner → one capped 10K solo (−5). Optimise to apply."><input type="checkbox" class="r-ns" data-side="${side}" data-id="${r.id}" ${r.ns?'checked':''}></label></td>
       <td class="num"><button class="x" data-act="del-runner" data-side="${side}" data-id="${r.id}" title="remove">×</button></td>
     </tr>`).join('');
   el('roster-'+side).innerHTML=`
@@ -489,7 +491,7 @@ function renderRoster(side){
     </div>
     <div class="panel-body">
       <table class="roster">
-        <thead><tr><th>Runner</th><th class="num">Pace /km</th><th class="num">5K</th><th class="num">10K</th><th class="num"></th></tr></thead>
+        <thead><tr><th>Runner</th><th class="num">Pace /km</th><th class="num">5K</th><th class="num">10K</th><th class="num">NS</th><th class="num"></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <div class="add-runner"><button class="btn btn-sm" data-act="add-runner" data-side="${side}">+ Add runner</button></div>
@@ -515,10 +517,9 @@ function renderLineup(side){
     const addOpts=un.map(r=>`<option value="${r.id}">${escapeHtml(r.name)} (${fmtTime(fiveK(paceToSec(r.pace)??0))})</option>`).join('');
     const addSel=un.length?`<select class="addsel" data-act="member-add" data-side="${side}" data-team="${t.id}" aria-label="add runner to team"><option value="">+ add runner…</option>${addOpts}</select>`:'';
     let leg1Ctrl='';
-    if((members.length>=3 || (members.length===2 && t.noshow)) && !t.dnf){
-      const lbl=members.length===2?'10K':'leg 1';
+    if(members.length>=3 && !t.dnf){
       const opts=members.map(m=>`<option value="${m.id}" ${m.id===(t.leg1Id||members.slice().sort((a,b)=>a.p-b.p)[0].id)?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
-      leg1Ctrl=`<span class="leg1">${lbl} <select data-act="set-leg1" data-side="${side}" data-team="${t.id}">${opts}</select></span>`;
+      leg1Ctrl=`<span class="leg1">leg 1 <select data-act="set-leg1" data-side="${side}" data-team="${t.id}">${opts}</select></span>`;
     }
     let badge='',note='';
     const ty=t.dnf?'dnf':tt.type;
@@ -542,8 +543,7 @@ function renderLineup(side){
         ${memChips}${addSel}
         <span class="ctrls" style="margin-left:auto">
           ${leg1Ctrl}
-          ${(members.length===1||members.length===2)?`<label class="dnfbox" title="no-show: runs 10K, −5 and capped at 6 pts"><input type="checkbox" data-act="toggle-noshow" data-side="${side}" data-team="${t.id}" ${(t.noshow||members.length===1)?'checked':''} ${members.length===1?'disabled':''}> no-show</label>`:''}
-          ${members.length>=1?`<label class="dnfbox" title="lock — the optimiser keeps this exact team (use it to pin the 10K runner)"><input type="checkbox" data-act="toggle-lock" data-side="${side}" data-team="${t.id}" ${t.lock?'checked':''}> lock</label>`:''}
+          ${members.length>=1?`<label class="dnfbox" title="lock — the optimiser keeps this exact team (use it to pin a runner / the 10K solo)"><input type="checkbox" data-act="toggle-lock" data-side="${side}" data-team="${t.id}" ${t.lock?'checked':''}> lock</label>`:''}
           <label class="dnfbox"><input type="checkbox" data-act="toggle-dnf" data-side="${side}" data-team="${t.id}" ${t.dnf?'checked':''}> DNF</label>
         </span>
       </div>
@@ -552,12 +552,15 @@ function renderLineup(side){
   }).join('');
 
   const totalTeams=T.teams.length;
+  const nsRunners=T.runners.filter(r=>r.ns);
+  const nsBanner=nsRunners.length?`<div class="ns-banner">⚠︎ no-show: <b>${nsRunners.map(r=>escapeHtml(r.name)).join(', ')}</b> — field ${nsRunners.length} capped 10 km solo${nsRunners.length>1?'s':''} (−5 each). Press <b>Best ${side==='our'?'Blue':'Red'} lineup</b>, or put one runner alone on a team.</div>`:'';
   el('lineup-'+side).innerHTML=`
     <div class="panel-top">
       <div class="pteam"><span class="dot"></span><span class="tcard-name" style="font-size:15px;color:var(--ink)">${escapeHtml(T.name)}</span></div>
-      <span class="meta">${totalTeams} teams · ${un.length} unassigned</span>
+      <span class="meta">${totalTeams} teams · ${un.length} unassigned${nsRunners.length?' · '+nsRunners.length+' no-show':''}</span>
     </div>
     <div class="panel-body">
+      ${nsBanner}
       <div class="pool"><span class="pool-label">Bench</span>${poolChips}</div>
       ${cards}
       <div class="lineup-actions">
@@ -653,6 +656,13 @@ function scoreCapped(myTeams,oppTimes){
   }
   return mp;
 }
+function* combos(arr,k){            // choose k items from arr -> arrays of length k
+  if(k<=0){yield [];return;}
+  if(arr.length<k)return;
+  const [head,...tail]=arr;
+  for(const c of combos(tail,k-1)) yield [head,...c];
+  yield* combos(tail,k);
+}
 function optimize(side){
   const other=side==='our'?'opp':'our';
   const oppTimes=fixedTimes(other);
@@ -669,9 +679,12 @@ function optimize(side){
     const tt=teamTime(mem,t.leg1Id,t.dnf,t.noshow);
     return {t:tt.t,capped:(tt.type==='solo'||tt.type==='trio10k')};
   }).filter(x=>x.t!=null&&isFinite(x.t));
-  const ids=state[side].runners.map(r=>r.id).filter(id=>!lockedIds.has(id));
-  // no-show structure among the UNLOCKED teams (a locked no-show is already fixed above)
-  const nsSizes=state[side].teams.filter(t=>!t.lock&&t.noshow&&!t.dnf&&(t.memberIds.length===1||t.memberIds.length===2)).map(t=>t.memberIds.length);
+  // runner-level no-show: NS runners are absent. Each one forces a capped 10K solo among the rest.
+  const activeIds=state[side].runners.filter(r=>!r.ns).map(r=>r.id);
+  const ids=activeIds.filter(id=>!lockedIds.has(id));
+  const nNS=state[side].runners.filter(r=>r.ns).length;
+  const lockedSolos=lockedTeams.filter(t=>t.memberIds.length===1).length;   // a locked solo already covers a no-show
+  const forcedSolos=Math.max(0, nNS-lockedSolos);
   const note=el('optnote'); note.textContent='Optimizing…';
   const timeOf=ts=>{
     if(ts.kind==='pair')   return {t:f(ts.ids[0])+f(ts.ids[1]),capped:false};
@@ -682,15 +695,10 @@ function optimize(side){
   setTimeout(()=>{
     let best=-1e9,bestStruct=null;
     const consider=groups=>{const my=lockedTimes.concat(groups.map(timeOf));const sc=scoreCapped(my,oppTimes);if(sc>best){best=sc;bestStruct=groups.map(g=>({...g,ids:g.ids.slice()}));}};
-    if(nsSizes.length===1 && nsSizes[0]===1){                       // 1 solo + (trio/pairs) on the rest
-      for(const s of ids){const rest=ids.filter(x=>x!==s);for(const g of partsPairsTrio(rest)) consider([{ids:[s],kind:'solo'},...g]);}
-    }else if(nsSizes.length===1 && nsSizes[0]===2){                 // 1 ten-K trio + pairs on the rest
-      for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){
-        const a=ids[i],b=ids[j],r=paceOf(a)<=paceOf(b)?a:b;const rest=ids.filter(x=>x!==a&&x!==b);
-        for(const g of partsPairsTrio(rest)) consider([{ids:[a,b],kind:'trio10k',leg1:r},...g]);
-      }
-    }else{                                                          // no (unlocked) no-show: plain pairs (+trio if odd)
-      for(const g of partsPairsTrio(ids)) consider(g);
+    for(const sset of combos(ids,forcedSolos)){                     // pick which active runners cover as 10K solos
+      const rest=ids.filter(x=>!sset.includes(x));
+      const solos=sset.map(s=>({ids:[s],kind:'solo'}));
+      for(const g of partsPairsTrio(rest)) consider([...solos,...g]);
     }
     if(bestStruct){
       const freeTeams=bestStruct.map(g=>{
@@ -702,7 +710,7 @@ function optimize(side){
       });
       state[side].teams=lockedTeams.concat(freeTeams);             // keep locked teams, append the optimised ones
       renderLineup(side);renderResults();
-      const bits=[]; if(lockedTeams.length)bits.push(lockedTeams.length+' locked'); if(nsSizes.length)bits.push('no-show kept');
+      const bits=[]; if(lockedTeams.length)bits.push(lockedTeams.length+' locked'); if(nNS)bits.push(nNS+' no-show');
       el('optnote').textContent=`Loaded the best ${side==='our'?'Blue':'Red'} lineup${bits.length?' ('+bits.join(', ')+')':''} → ${trim(best)} pts.`;
     }else{note.textContent='could not optimize';}
   },20);
@@ -739,10 +747,10 @@ document.addEventListener('change',e=>{
   if(t.dataset.act==='member-add'){const id=+t.value;if(id){addMember(side,+t.dataset.team,id);}return;}
   if(t.dataset.act==='set-leg1'){const team=findTeam(side,+t.dataset.team);if(team){team.leg1Id=+t.value;renderLineup(side);renderResults();}return;}
   if(t.dataset.act==='toggle-dnf'){const team=findTeam(side,+t.dataset.team);if(team){team.dnf=t.checked;renderLineup(side);renderResults();}return;}
-  if(t.dataset.act==='toggle-noshow'){const team=findTeam(side,+t.dataset.team);if(team){team.noshow=t.checked;
-    if(team.noshow && team.memberIds.length===2 && !team.leg1Id){team.leg1Id=team.memberIds.slice().sort((a,b)=>(paceToSec(runnerById(side,a).pace)??0)-(paceToSec(runnerById(side,b).pace)??0))[0];}
-    renderLineup(side);renderResults();}return;}
   if(t.dataset.act==='toggle-lock'){const team=findTeam(side,+t.dataset.team);if(team){team.lock=t.checked;renderLineup(side);renderResults();}return;}
+  if(t.classList.contains('r-ns')){const r=runnerById(side,+t.dataset.id);if(r){r.ns=t.checked;
+    if(r.ns){state[side].teams.forEach(tm=>{tm.memberIds=tm.memberIds.filter(x=>x!==r.id);if(tm.leg1Id===r.id)tm.leg1Id=null;});}  // a no-show runner leaves the lineup
+    renderRoster(side);renderLineup(side);renderResults();}return;}
 });
 
 document.addEventListener('click',e=>{
@@ -754,7 +762,7 @@ document.addEventListener('click',e=>{
   if(act==='add-team'){state[side].teams.push({id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false,lock:false});renderLineup(side);renderResults();return;}
   if(act==='clear-lineup'){state[side].teams=[];renderLineup(side);renderResults();el('optnote').textContent='';return;}
   if(act==='optimize'){optimize(side);return;}
-  if(act==='add-runner'){state[side].runners.push({id:++uid,name:'New',pace:'5:00',tenk:''});renderRoster(side);renderLineup(side);renderResults();return;}
+  if(act==='add-runner'){state[side].runners.push({id:++uid,name:'New',pace:'5:00',tenk:'',ns:false});renderRoster(side);renderLineup(side);renderResults();return;}
   if(act==='del-runner'){delRunner(side,+b.dataset.id);return;}
 });
 
