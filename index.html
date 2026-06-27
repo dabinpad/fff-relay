@@ -314,7 +314,9 @@
         <div class="ptable" id="ptable"></div>
         <div class="legend">
           <strong>Trio</strong> = leg-1 runner (full) + average of the two leg-2 runners → <code>t_leg1 + (a+b)/2</code>. Fastest-on-leg-1 is set by default.<br>
-          <strong>No-show (NS)</strong> — tick <b>NS</b> next to a runner in section&nbsp;1 to mark them absent. They leave the lineup, and the team forfeits a runner: <b>Optimise</b> then fields one <strong>solo</strong> (a teammate runs the full 10 km = <code>2 × 5K</code>) that takes <code>−5</code> and is <strong>capped at 6 pts</strong>. One NS → one capped solo.<br>
+          <strong>No-show (NS)</strong> — tick <b>NS</b> next to a runner in section&nbsp;1 to mark them absent. They leave the lineup and the team forfeits a runner. <b>Optimise</b> fields one capped no-show team (<code>−5</code>, <strong>max 6 pts</strong>) per NS, trying both and keeping the better:<br>
+          &nbsp;&nbsp;• <strong>Solo</strong> — one teammate runs the full 10 km = <code>2 × 5K</code> (or the 10K override).<br>
+          &nbsp;&nbsp;• <strong>10K-trio</strong> — the leg-1 runner runs the 10 km; his latter 5K is averaged with a leg-2 runner's 5K: <code>5K + (latter-5K + partner-5K)/2</code>.<br>
           <strong>DNF</strong> (toggle on a team) is placed last for 0 pts and takes an extra <code>−5</code>.<br>
           <strong>10K override</strong> — set a per-runner 10 km time in the roster (blank ⇒ 10K = 2×5K, no fatigue).<br>
           <strong>Lock</strong> (toggle on a team) — the optimiser keeps that exact team fixed; e.g. put your chosen 10 km runner alone on a team and lock it, then optimise the rest.<br>
@@ -517,9 +519,10 @@ function renderLineup(side){
     const addOpts=un.map(r=>`<option value="${r.id}">${escapeHtml(r.name)} (${fmtTime(fiveK(paceToSec(r.pace)??0))})</option>`).join('');
     const addSel=un.length?`<select class="addsel" data-act="member-add" data-side="${side}" data-team="${t.id}" aria-label="add runner to team"><option value="">+ add runner…</option>${addOpts}</select>`:'';
     let leg1Ctrl='';
-    if(members.length>=3 && !t.dnf){
+    if((members.length>=3 || (members.length===2 && t.noshow)) && !t.dnf){
+      const lbl=members.length===2?'10K':'leg 1';
       const opts=members.map(m=>`<option value="${m.id}" ${m.id===(t.leg1Id||members.slice().sort((a,b)=>a.p-b.p)[0].id)?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
-      leg1Ctrl=`<span class="leg1">leg 1 <select data-act="set-leg1" data-side="${side}" data-team="${t.id}">${opts}</select></span>`;
+      leg1Ctrl=`<span class="leg1">${lbl} <select data-act="set-leg1" data-side="${side}" data-team="${t.id}">${opts}</select></span>`;
     }
     let badge='',note='';
     const ty=t.dnf?'dnf':tt.type;
@@ -553,7 +556,7 @@ function renderLineup(side){
 
   const totalTeams=T.teams.length;
   const nsRunners=T.runners.filter(r=>r.ns);
-  const nsBanner=nsRunners.length?`<div class="ns-banner">⚠︎ no-show: <b>${nsRunners.map(r=>escapeHtml(r.name)).join(', ')}</b> — field ${nsRunners.length} capped 10 km solo${nsRunners.length>1?'s':''} (−5 each). Press <b>Best ${side==='our'?'Blue':'Red'} lineup</b>, or put one runner alone on a team.</div>`:'';
+  const nsBanner=nsRunners.length?`<div class="ns-banner">⚠︎ no-show: <b>${nsRunners.map(r=>escapeHtml(r.name)).join(', ')}</b> — field ${nsRunners.length} capped 10 km no-show team${nsRunners.length>1?'s':''} (−5 each). Press <b>Best ${side==='our'?'Blue':'Red'} lineup</b> — it picks solo vs 10K-trio for you.</div>`:'';
   el('lineup-'+side).innerHTML=`
     <div class="panel-top">
       <div class="pteam"><span class="dot"></span><span class="tcard-name" style="font-size:15px;color:var(--ink)">${escapeHtml(T.name)}</span></div>
@@ -656,12 +659,20 @@ function scoreCapped(myTeams,oppTimes){
   }
   return mp;
 }
-function* combos(arr,k){            // choose k items from arr -> arrays of length k
-  if(k<=0){yield [];return;}
-  if(arr.length<k)return;
-  const [head,...tail]=arr;
-  for(const c of combos(tail,k-1)) yield [head,...c];
-  yield* combos(tail,k);
+// Enumerate every way to cover k no-show teams as either a SOLO (1 runner does the full 10K)
+// or a 10K-TRIO (2 runners: the leg-1 runner runs the 10K, the other runs leg 2 only). Either of
+// the two may be the 10K leg-1 runner, so both are tried. Yields {teams, rest}.
+function* noShowAssignments(ids,k){
+  if(k===0){yield {teams:[],rest:ids};return;}
+  for(let i=0;i<ids.length;i++){                                   // solo
+    const rest=ids.filter((_,x)=>x!==i);
+    for(const sub of noShowAssignments(rest,k-1)) yield {teams:[{ids:[ids[i]],kind:'solo'},...sub.teams],rest:sub.rest};
+  }
+  for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){    // 10K-trio (try each runner as the 10K leg-1)
+    const rest=ids.filter((_,x)=>x!==i&&x!==j);
+    for(const leg1 of [ids[i],ids[j]])
+      for(const sub of noShowAssignments(rest,k-1)) yield {teams:[{ids:[ids[i],ids[j]],kind:'trio10k',leg1},...sub.teams],rest:sub.rest};
+  }
 }
 function optimize(side){
   const other=side==='our'?'opp':'our';
@@ -679,12 +690,13 @@ function optimize(side){
     const tt=teamTime(mem,t.leg1Id,t.dnf,t.noshow);
     return {t:tt.t,capped:(tt.type==='solo'||tt.type==='trio10k')};
   }).filter(x=>x.t!=null&&isFinite(x.t));
-  // runner-level no-show: NS runners are absent. Each one forces a capped 10K solo among the rest.
+  // runner-level no-show: NS runners are absent. Each one forces one capped no-show team — the
+  // optimiser tries both a solo and a 10K-trio for it and keeps whichever scores higher.
   const activeIds=state[side].runners.filter(r=>!r.ns).map(r=>r.id);
   const ids=activeIds.filter(id=>!lockedIds.has(id));
   const nNS=state[side].runners.filter(r=>r.ns).length;
-  const lockedSolos=lockedTeams.filter(t=>t.memberIds.length===1).length;   // a locked solo already covers a no-show
-  const forcedSolos=Math.max(0, nNS-lockedSolos);
+  const lockedNoShows=lockedTimes.filter(x=>x.capped).length;   // a locked solo / 10K-trio already covers a no-show
+  const forcedNoShows=Math.max(0, nNS-lockedNoShows);
   const note=el('optnote'); note.textContent='Optimizing…';
   const timeOf=ts=>{
     if(ts.kind==='pair')   return {t:f(ts.ids[0])+f(ts.ids[1]),capped:false};
@@ -695,10 +707,8 @@ function optimize(side){
   setTimeout(()=>{
     let best=-1e9,bestStruct=null;
     const consider=groups=>{const my=lockedTimes.concat(groups.map(timeOf));const sc=scoreCapped(my,oppTimes);if(sc>best){best=sc;bestStruct=groups.map(g=>({...g,ids:g.ids.slice()}));}};
-    for(const sset of combos(ids,forcedSolos)){                     // pick which active runners cover as 10K solos
-      const rest=ids.filter(x=>!sset.includes(x));
-      const solos=sset.map(s=>({ids:[s],kind:'solo'}));
-      for(const g of partsPairsTrio(rest)) consider([...solos,...g]);
+    for(const asg of noShowAssignments(ids,forcedNoShows)){          // each no-show: solo OR 10K-trio (optimiser's pick)
+      for(const g of partsPairsTrio(asg.rest)) consider([...asg.teams,...g]);
     }
     if(bestStruct){
       const freeTeams=bestStruct.map(g=>{
