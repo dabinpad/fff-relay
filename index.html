@@ -52,7 +52,12 @@
   .sc.opp .sc-info{text-align:right}
   .sc .sub{font-family:var(--mono);font-size:11.5px;font-weight:500;color:var(--ink-2);white-space:nowrap}
   .sc .sub.winp{font-weight:800;font-family:var(--disp)} .sc.our .sub.winp{color:var(--our)} .sc.opp .sub.winp{color:var(--opp)}
-  .robust-line{margin:-8px 0 16px;text-align:center;font-size:12px;color:var(--ink-2);font-weight:600}
+  .robust-line{margin:-6px 0 16px;text-align:center}
+  .robust-line .rb-head{font-size:12.5px;color:var(--ink-2);font-weight:600;margin-bottom:6px}
+  .robust-line .rb-head b{color:var(--our);font-family:var(--disp);font-size:14px;margin-left:3px}
+  .robust-line .rb-chips{display:inline-flex;flex-wrap:wrap;gap:6px;justify-content:center}
+  .robust-line .rb-chip{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:11.5px;color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+  .robust-line .rb-chip i{color:var(--ink-2);font-style:normal;font-weight:600;margin-right:6px}
   .sc.opp{flex-direction:row-reverse}
   .sc .pts{font-family:var(--disp);font-weight:800;font-size:38px;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink)}
   .sc.our .pts{color:var(--our-d)} .sc.opp .pts{color:var(--opp-d)}
@@ -470,12 +475,11 @@ function simWin(blue,red,N){          // Blue win fraction over N noisy races
 function winProbBoard(N){const b=sideLegs('our'),r=sideLegs('opp');if(!b.length||!r.length)return null;return simWin(b,r,N);}
 function robustWin(N){                // Blue win% averaged over plausible Red strategies (vs CURRENT Blue lineup)
   const b=sideLegs('our'); if(!b.length) return null;
+  const ARCH=[['Optimal','oppOptimal'],['Balanced','oppBalanced'],['3-ace','oppSpreadAces'],['Stacked','oppStacked']];
   const each=[];
-  for(const key of ['oppOptimal','oppBalanced','oppSpreadAces','oppStacked']){
-    const r=redArchetypeLegs(LINEUPS[key]); if(r&&r.length) each.push(simWin(b,r,N).our);
-  }
+  for(const [label,key] of ARCH){const r=redArchetypeLegs(LINEUPS[key]); if(r&&r.length) each.push({label,p:simWin(b,r,N).our});}
   if(!each.length) return null;
-  return {avg:each.reduce((a,b)=>a+b,0)/each.length, each};
+  return {avg:each.reduce((a,x)=>a+x.p,0)/each.length, each};
 }
 let winTok=0;
 
@@ -670,8 +674,9 @@ function renderResults(){
       const wp=winProbBoard(2000);
       if(wp){ if(swin)swin.textContent='win '+Math.round(wp.our*100)+'%'; if(spwin)spwin.textContent='win '+Math.round(wp.opp*100)+'%'; }
       const rw=robustWin(1000);
-      if(rline) rline.textContent = rw
-        ? `${state.our.name} ≈ ${Math.round(rw.avg*100)}% to win against a typical Red lineup  (avg of ${rw.each.length}: ${rw.each.map(x=>Math.round(x*100)+'%').join(' · ')})`
+      if(rline) rline.innerHTML = rw
+        ? `<div class="rb-head">${escapeHtml(state.our.name)} win chance vs a typical Red <b>≈ ${Math.round(rw.avg*100)}%</b></div>`
+          +`<div class="rb-chips">${rw.each.map(s=>`<span class="rb-chip"><i>${s.label}</i>${Math.round(s.p*100)}%</span>`).join('')}</div>`
         : '';
     },0);
   }
