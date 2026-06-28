@@ -31,14 +31,14 @@
     background:#fff;border-bottom:1px solid var(--line);box-shadow:0 3px 12px rgba(15,26,46,.09);
     transform:translateY(-105%);transition:transform .22s ease;padding-top:env(safe-area-inset-top)}
   .stickybar.show{transform:none}
-  .stickybar .sb{color:#fff;padding:6px 16px;min-width:118px;display:flex;align-items:center;gap:9px}
+  .stickybar .sb{color:#fff;padding:6px 13px;min-width:0;flex:0 1 auto;display:flex;align-items:center;gap:8px}
   .stickybar .sb.our{background:var(--our);justify-content:flex-start}
   .stickybar .sb.opp{background:var(--opp);justify-content:flex-end}
-  .stickybar .sb-name{font-family:var(--disp);font-weight:800;font-size:13px;letter-spacing:.02em;text-transform:uppercase;opacity:.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
-  .stickybar .sb-pts{font-family:var(--disp);font-weight:800;font-size:23px;font-variant-numeric:tabular-nums;line-height:1}
-  .stickybar .sb-mid{flex:1;max-width:430px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px;padding:0 12px}
-  .stickybar .sb-logo{height:30px;width:auto;flex:none}
-  .stickybar .sb-title{font-family:var(--disp);font-weight:800;font-size:16.5px;color:var(--brand);letter-spacing:.005em;line-height:1.04;text-align:center}
+  .stickybar .sb-name{font-family:var(--disp);font-weight:800;font-size:12.5px;letter-spacing:.02em;text-transform:uppercase;opacity:.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
+  .stickybar .sb-pts{font-family:var(--disp);font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;line-height:1}
+  .stickybar .sb-mid{flex:0 1 auto;min-width:0;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:9px;padding:0 12px}
+  .stickybar .sb-logo{height:28px;width:auto;flex:none}
+  .stickybar .sb-title{font-family:var(--disp);font-weight:800;font-size:16px;color:var(--brand);letter-spacing:.005em;line-height:1.04;text-align:center;white-space:nowrap}
 
   /* ---------- banner (FFF branded, light) ---------- */
   .banner{background:#fff;border-top:4px solid var(--brand);border-bottom:1px solid var(--line)}
@@ -62,10 +62,10 @@
   .result-brand .rb-logo{height:36px;width:auto;flex:none}
   .rb-title{font-family:var(--disp);font-weight:800;font-size:20px;letter-spacing:.004em;color:var(--brand);line-height:1.05}
   .rb-title .rb-yr{color:var(--gray);font-weight:700}
-  /* race-day win chance row (moved out of the big score cards) */
-  .winrow{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;margin:-4px 0 16px}
+  /* race-day win chance row (below the finish board, outside the result screencap) */
+  .winrow{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;margin:14px 0 8px}
   .winrow.hidden{display:none}
-  .wr-cap{font-family:var(--disp);font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+  .wr-cap{font-family:var(--disp);font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--brand-d)}
   .winrow .wr{font-family:var(--disp);font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;padding:2px 10px;border-radius:999px;min-width:42px;text-align:center}
   .winrow .wr.our{color:var(--our-d);background:var(--our-bg)} .winrow .wr.opp{color:var(--opp-d);background:var(--opp-bg)}
   .wr-sep{font-family:var(--disp);font-size:12px;font-weight:700;color:#9aa6bb}
@@ -97,6 +97,8 @@
 
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0 12px}
   .toolbar label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
+  .tb-label{display:inline-flex;align-items:center;gap:7px;position:relative}
+  .help.help-flush{position:static}   /* its popover anchors to .tb-label's left edge, so it can't run off a narrow screen */
   select,input,button{font-family:var(--body);font-size:14px}
   .toolbar select{padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-weight:500;min-width:240px}
   .btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;border-radius:10px;font-weight:600;cursor:pointer;transition:.12s}
@@ -109,7 +111,15 @@
   .lockchk.our input{accent-color:var(--our)} .lockchk.opp input{accent-color:var(--opp)}
   .lockchk.our:has(input:checked){border-color:var(--our);background:var(--our-bg);color:var(--our-d)}
   .lockchk.opp:has(input:checked){border-color:var(--opp);background:var(--opp-bg);color:var(--opp-d)}
-  .lockhint{font-size:12.5px;color:var(--ink-2);margin:-4px 0 14px;line-height:1.4}
+  /* compact "?" help buttons with a tap/click popover */
+  .help{position:relative;display:inline-flex;vertical-align:middle}
+  .help-btn{width:18px;height:18px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-family:var(--disp);font-size:11px;font-weight:800;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}
+  .help-btn:hover{border-color:var(--brand);color:var(--brand)}
+  .help.open .help-btn{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .help-pop{position:absolute;top:calc(100% + 7px);left:0;z-index:50;display:none;width:max-content;max-width:min(236px,78vw);white-space:normal;background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 28px rgba(15,26,46,.18);padding:10px 12px;font-family:var(--body);font-size:12.5px;font-weight:500;line-height:1.45;color:var(--ink);text-transform:none;letter-spacing:normal;text-align:left}
+  .help-pop.right{left:auto;right:0}
+  .help.open .help-pop{display:block}
+  .stage-head .help{margin-left:auto}
 
   /* ---------- stages ---------- */
   .stage{margin-top:30px}
@@ -189,7 +199,7 @@
 
   /* ---------- results board ---------- */
   .board{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
-  .checker{height:10px;background-image:linear-gradient(45deg,#11203c 25%,transparent 25%),linear-gradient(-45deg,#11203c 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#11203c 75%),linear-gradient(-45deg,transparent 75%,#11203c 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;background-color:#fff}
+  .checker{height:10px;background-image:linear-gradient(45deg,var(--brand) 25%,transparent 25%),linear-gradient(-45deg,var(--brand) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--brand) 75%),linear-gradient(-45deg,transparent 75%,var(--brand) 75%);background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;background-color:#fff}
   .board-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line-2)}
   .board-head h3{font-family:var(--disp);font-weight:700;font-size:18px;letter-spacing:.03em;text-transform:uppercase;margin:0}
   .board-head .cap{font-size:12px;color:var(--ink-2)}
@@ -259,7 +269,7 @@
     .sc .lab{font-size:13px} .sc .pts{font-size:30px;line-height:1}
     /* label on its own line; dropdown + Reset share the next line */
     .toolbar{margin:12px 0 4px;gap:8px}
-    .toolbar label{flex:1 1 100%}
+    .toolbar .tb-label{flex:1 1 100%}
     .toolbar select{min-width:0;flex:1 1 0;width:auto}
     .toolbar .btn{flex:0 0 auto;text-align:center;white-space:nowrap}
     /* team controls: keep blue left / red right, optimize label + note below */
@@ -267,11 +277,11 @@
     .tc-col.our{grid-area:our} .tc-col.opp{grid-area:opp} .tc-mid{grid-area:mid}
     .tc-title{font-size:14px}
     .optbtn{padding:10px 12px}
-    /* sticky scorebar — constrain the centre so the title wraps and the team names keep room */
-    .stickybar .sb{padding:5px 7px;min-width:0;flex:1 1 0;gap:4px}
-    .stickybar .sb-pts{font-size:18px} .stickybar .sb-name{font-size:10.5px;max-width:72px}
-    .stickybar .sb-mid{flex:0 1 auto;max-width:128px;padding:0 5px;gap:6px}
-    .stickybar .sb-logo{height:21px} .stickybar .sb-title{font-size:11.5px;line-height:1.06;white-space:normal}
+    /* sticky scorebar — title stays on ONE line; narrow the colour blocks to make room */
+    .stickybar .sb{padding:5px 7px;min-width:0;flex:0 1 auto;gap:4px}
+    .stickybar .sb-pts{font-size:17px} .stickybar .sb-name{font-size:10px;max-width:54px}
+    .stickybar .sb-mid{flex:0 1 auto;max-width:none;min-width:0;padding:0 5px;gap:5px}
+    .stickybar .sb-logo{height:18px} .stickybar .sb-title{font-size:11px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .stage{margin-top:22px}
     .stage-head h2{font-size:19px} .stage-head .hint{font-size:11.5px}
     .panel-body{padding:11px}
@@ -325,7 +335,7 @@
   <div class="wrap">
     <!-- Try a scenario -->
     <div class="toolbar">
-      <label for="preset">Try a scenario</label>
+      <span class="tb-label"><label for="preset">Try a scenario</label><span class="help help-flush"><button type="button" class="help-btn" aria-label="About scenarios">?</button><span class="help-pop">Ready-made matchups — pick one to load both lineups. Lock a team (below) to keep it fixed and compare it against each opponent setup.</span></span></span>
       <select id="preset"></select>
       <button class="btn ghost" id="reset">Reset to defaults</button>
     </div>
@@ -337,7 +347,7 @@
         <button class="optbtn our" id="opt-our" data-act="optimize" data-side="our">Best Blue lineup</button>
       </div>
       <div class="tc-mid">
-        <span class="tc-title">⚡ Auto-optimize</span>
+        <span class="tc-title">⚡ Auto-optimize <span class="help"><button type="button" class="help-btn" aria-label="About optimise and lock">?</button><span class="help-pop right">Optimise loads a side's best lineup against the other's current one. Lock a team to pin its lineup — times stay editable, but runners can't be added or removed — so switching scenarios only changes the other team, letting you compare against each opponent combo.</span></span></span>
         <div class="optbar-note" id="optnote"></div>
       </div>
       <div class="tc-col opp">
@@ -345,7 +355,6 @@
         <button class="optbtn opp" id="opt-opp" data-act="optimize" data-side="opp">Best Red lineup</button>
       </div>
     </div>
-    <div class="lockhint" id="lockhint">Lock a team to pin its lineup — times stay editable, but runners can't be added or removed. Switching scenarios then only changes the other team, so you can compare your locked team against each opponent combo.</div>
 
     <!-- Final score -->
     <!-- branded result header so a screenshot of the result captures the game name + logo -->
@@ -359,15 +368,16 @@
       <div class="midv"><span class="vs">VS</span><span class="verdict none" id="verdict">set lineups</span></div>
       <div class="sc opp"><div class="sc-info"><span class="lab" id="sc-opp-name">CM &amp; SIN team</span><span class="sub" id="sc-opp-time">—</span></div><div class="ptsbox"><span class="pts" id="sc-opp">–</span></div></div>
     </div>
+    <!-- Finish board -->
+    <div id="results"></div>
+
+    <!-- race-day win chance sits BELOW the board so it's outside the shareable result screencap -->
     <div class="winrow" id="winrow" title="Race-day Monte-Carlo win chance vs the opponent lineup on the board — many races, each leg jittered ±10 s/km.">
       <span class="wr-cap">Race-day win chance</span>
       <span class="wr our" id="wr-our">—</span>
       <span class="wr-sep">vs</span>
       <span class="wr opp" id="wr-opp">—</span>
     </div>
-
-    <!-- Finish board -->
-    <div id="results"></div>
     <details class="adv">
       <summary>Scoring rules &amp; points table</summary>
       <div class="adv-body">
@@ -389,7 +399,7 @@
 
     <!-- 1 . Team rosters & pace -->
     <section class="stage">
-      <div class="stage-head"><span class="step">1</span><h2>Team rosters &amp; pace</h2><span class="hint">pace is min:sec per km — 5K = pace × 5; tick <em>NS</em> for a no-show</span></div>
+      <div class="stage-head"><span class="step">1</span><h2>Team rosters &amp; pace</h2><span class="help"><button type="button" class="help-btn" aria-label="About rosters">?</button><span class="help-pop right">Pace is min:sec per km; 5K = pace × 5. Tick <b>NS</b> to mark a no-show.</span></span></div>
       <div class="two-col">
         <div class="panel our" id="roster-our"></div>
         <div class="panel opp" id="roster-opp"></div>
@@ -398,7 +408,7 @@
 
     <!-- 2 . Team lineups -->
     <section class="stage">
-      <div class="stage-head"><span class="step">2</span><h2>Team lineups</h2><span class="hint">build pairs / trios, or hit Optimise. Mark no-shows in section 1 (NS) — one capped 10K solo each</span></div>
+      <div class="stage-head"><span class="step">2</span><h2>Team lineups</h2><span class="help"><button type="button" class="help-btn" aria-label="About lineups">?</button><span class="help-pop right">Build pairs / trios, or hit Optimise. Mark no-shows in section 1 (<b>NS</b>) — one capped 10K solo each.</span></span></div>
       <div class="two-col">
         <div class="panel our" id="lineup-our"></div>
         <div class="panel opp" id="lineup-opp"></div>
@@ -1000,6 +1010,13 @@ el('reset').addEventListener('click',()=>{el('lock-our').checked=false;el('lock-
 }));
 // reuse the header logo bitmap in the sticky bar (no second copy of the data URI)
 (function(){const src=document.querySelector('.brand .logo');if(!src)return;['sb-logo','rb-logo'].forEach(id=>{const d=el(id);if(d)d.src=src.src;});})();
+// "?" help popovers: tap to toggle, tap elsewhere to close
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('.help-btn');
+  const open=document.querySelectorAll('.help.open');
+  if(btn){const h=btn.parentElement, was=h.classList.contains('open');open.forEach(x=>{if(x!==h)x.classList.remove('open');});h.classList.toggle('open',!was);return;}
+  open.forEach(x=>x.classList.remove('open'));
+});
 
 state=freshState();
 applyPreset(PRESETS[0]);
