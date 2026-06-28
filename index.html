@@ -31,11 +31,14 @@
     background:#fff;border-bottom:1px solid var(--line);box-shadow:0 3px 12px rgba(15,26,46,.09);
     transform:translateY(-105%);transition:transform .22s ease;padding-top:env(safe-area-inset-top)}
   .stickybar.show{transform:none}
-  .stickybar .sb{font-family:var(--disp);font-weight:800;font-size:18px;font-variant-numeric:tabular-nums;color:#fff;padding:5px 18px;min-width:58px;text-align:center;display:flex;align-items:center;justify-content:center}
-  .stickybar .sb.our{background:var(--our)} .stickybar .sb.opp{background:var(--opp)}
-  .stickybar .sb-mid{flex:1;max-width:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 12px;text-align:center;gap:0}
-  .stickybar .sb-title{font-family:var(--disp);font-weight:800;font-size:11.5px;color:var(--brand);letter-spacing:.01em;line-height:1.1}
-  .stickybar .sb-verdict{font-family:var(--disp);font-weight:700;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);line-height:1.2}
+  .stickybar .sb{color:#fff;padding:6px 16px;min-width:118px;display:flex;align-items:center;gap:9px}
+  .stickybar .sb.our{background:var(--our);justify-content:flex-start}
+  .stickybar .sb.opp{background:var(--opp);justify-content:flex-end}
+  .stickybar .sb-name{font-family:var(--disp);font-weight:800;font-size:13px;letter-spacing:.02em;text-transform:uppercase;opacity:.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+  .stickybar .sb-pts{font-family:var(--disp);font-weight:800;font-size:23px;font-variant-numeric:tabular-nums;line-height:1}
+  .stickybar .sb-mid{flex:1;max-width:430px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px;padding:0 12px}
+  .stickybar .sb-logo{height:30px;width:auto;flex:none}
+  .stickybar .sb-title{font-family:var(--disp);font-weight:800;font-size:16.5px;color:var(--brand);letter-spacing:.005em;line-height:1.04;text-align:center}
 
   /* ---------- banner (FFF branded, light) ---------- */
   .banner{background:#fff;border-top:4px solid var(--brand);border-bottom:1px solid var(--line)}
@@ -54,8 +57,18 @@
   .sc.opp .sc-info{text-align:right}
   .sc .sub{font-family:var(--mono);font-size:11.5px;font-weight:500;color:var(--ink-2);white-space:nowrap}
   .ptsbox{display:flex;align-items:baseline;gap:7px}
-  .winp-inline{font-family:var(--disp);font-weight:800;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .sc.our .winp-inline{color:var(--our)} .sc.opp .winp-inline{color:var(--opp)}
+  /* branded result header (shareable screencap) */
+  .result-brand{display:flex;align-items:center;justify-content:center;gap:12px;padding:2px 4px;margin:2px 0 12px}
+  .result-brand .rb-logo{height:36px;width:auto;flex:none}
+  .rb-title{font-family:var(--disp);font-weight:800;font-size:20px;letter-spacing:.004em;color:var(--brand);line-height:1.05}
+  .rb-title .rb-yr{color:var(--gray);font-weight:700}
+  /* race-day win chance row (moved out of the big score cards) */
+  .winrow{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;margin:-4px 0 16px}
+  .winrow.hidden{display:none}
+  .wr-cap{font-family:var(--disp);font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2)}
+  .winrow .wr{font-family:var(--disp);font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;padding:2px 10px;border-radius:999px;min-width:42px;text-align:center}
+  .winrow .wr.our{color:var(--our-d);background:var(--our-bg)} .winrow .wr.opp{color:var(--opp-d);background:var(--opp-bg)}
+  .wr-sep{font-family:var(--disp);font-size:12px;font-weight:700;color:#9aa6bb}
   .sc.opp{flex-direction:row-reverse}
   .sc .pts{font-family:var(--disp);font-weight:800;font-size:38px;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink)}
   .sc.our .pts{color:var(--our-d)} .sc.opp .pts{color:var(--opp-d)}
@@ -64,18 +77,22 @@
   .verdict{margin-top:4px;font-family:var(--disp);font-weight:800;font-size:13.5px;letter-spacing:.04em;text-transform:uppercase;text-align:center;padding:3px 11px;border-radius:999px;white-space:nowrap}
   .verdict.our{background:var(--our);color:#fff} .verdict.opp{background:var(--opp);color:#fff} .verdict.tie{background:#43506b;color:#fff} .verdict.none{color:var(--ink-2);background:var(--surface-2)}
 
-  /* ---------- auto-optimize bar ---------- */
-  .optbar{background:linear-gradient(180deg,#fff,var(--brand-bg));border:1px solid #E3D5F1;border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center;margin:0 0 14px}
-  .optbar-title{font-family:var(--disp);font-weight:800;font-size:16px;letter-spacing:.01em;color:var(--brand-d)}
-  .optbar-btns{display:flex;gap:10px}
-  .optbtn{appearance:none;border:none;cursor:pointer;border-radius:11px;padding:11px 18px;color:#fff;font-family:var(--disp);font-weight:800;font-size:14.5px;letter-spacing:.01em;transition:.12s;box-shadow:0 2px 9px rgba(15,26,46,.16)}
+  /* ---------- team controls: lock + optimize, blue left / red right ---------- */
+  .teamctrl{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 18px;align-items:stretch;background:linear-gradient(180deg,#fff,var(--brand-bg));border:1px solid #E3D5F1;border-radius:14px;padding:13px 16px;box-shadow:var(--shadow);margin:12px 0}
+  .tc-col{display:flex;flex-direction:column;gap:9px;min-width:0}
+  .tc-col.our .lockchk{align-self:flex-start}
+  .tc-col.opp{align-items:flex-end}
+  .tc-col.opp .lockchk{align-self:flex-end}
+  .tc-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;min-width:108px}
+  .tc-title{font-family:var(--disp);font-weight:800;font-size:14.5px;letter-spacing:.01em;color:var(--brand-d);white-space:nowrap}
+  .optbtn{appearance:none;border:none;cursor:pointer;border-radius:11px;padding:11px 18px;color:#fff;font-family:var(--disp);font-weight:800;font-size:14.5px;letter-spacing:.01em;transition:.12s;box-shadow:0 2px 9px rgba(15,26,46,.16);width:100%}
   .optbtn:hover{transform:translateY(-1px)} .optbtn:active{transform:translateY(0)}
-  .optbtn:disabled,.optbtn.is-locked{opacity:.4;cursor:not-allowed;box-shadow:none;filter:grayscale(.4)}
-  .optbtn:disabled:hover,.optbtn.is-locked:hover{transform:none;background:var(--our)}
-  .optbtn.opp:disabled:hover,.optbtn.opp.is-locked:hover{background:var(--opp)}
+  .optbtn:disabled,.optbtn.is-locked{opacity:.4;cursor:not-allowed;box-shadow:none;filter:grayscale(.4);transform:none}
   .optbtn.our{background:var(--our)} .optbtn.our:hover{background:var(--our-d)}
   .optbtn.opp{background:var(--opp)} .optbtn.opp:hover{background:var(--opp-d)}
-  .optbar-note{grid-column:1/-1;font-size:13px;font-weight:600;color:var(--brand-d)}
+  .optbtn.our:disabled:hover,.optbtn.our.is-locked:hover{background:var(--our);transform:none}
+  .optbtn.opp:disabled:hover,.optbtn.opp.is-locked:hover{background:var(--opp);transform:none}
+  .optbar-note{font-size:12.5px;font-weight:600;color:var(--brand-d);line-height:1.35}
   .optbar-note:empty{display:none}
 
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0 12px}
@@ -86,13 +103,10 @@
   .btn:hover{border-color:#b9c2d2;background:#fff}
   .btn.ghost{background:transparent}
   .btn-sm{padding:5px 10px;font-size:12.5px;border-radius:8px}
-  .locks{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
-  .toolbar .lockchk{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;letter-spacing:normal;text-transform:none;color:var(--ink);transition:.12s;user-select:none}
+  .lockchk{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;letter-spacing:normal;text-transform:none;color:var(--ink);transition:.12s;user-select:none}
   .lockchk:hover{border-color:#b9c2d2;background:#fff}
   .lockchk input{width:16px;height:16px;cursor:pointer;margin:0}
   .lockchk.our input{accent-color:var(--our)} .lockchk.opp input{accent-color:var(--opp)}
-  .lockchk .lk-dot{width:9px;height:9px;border-radius:50%;flex:none}
-  .lockchk.our .lk-dot{background:var(--our)} .lockchk.opp .lk-dot{background:var(--opp)}
   .lockchk.our:has(input:checked){border-color:var(--our);background:var(--our-bg);color:var(--our-d)}
   .lockchk.opp:has(input:checked){border-color:var(--opp);background:var(--opp-bg);color:var(--opp-d)}
   .lockhint{font-size:12.5px;color:var(--ink-2);margin:-4px 0 14px;line-height:1.4}
@@ -243,18 +257,21 @@
     .sc{flex-direction:column-reverse;align-items:flex-start;gap:2px;padding:9px 12px}
     .sc.opp{flex-direction:column-reverse;align-items:flex-end}
     .sc .lab{font-size:13px} .sc .pts{font-size:30px;line-height:1}
-    /* full-width controls */
+    /* label on its own line; dropdown + Reset share the next line */
     .toolbar{margin:12px 0 4px;gap:8px}
-    .toolbar select{min-width:0;flex:1 1 100%;width:100%}
-    .toolbar .btn{flex:1 1 auto;text-align:center}
-    /* optimize bar stacks */
-    .optbar{grid-template-columns:1fr;padding:13px;gap:11px}
-    .optbar-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .toolbar label{flex:1 1 100%}
+    .toolbar select{min-width:0;flex:1 1 0;width:auto}
+    .toolbar .btn{flex:0 0 auto;text-align:center;white-space:nowrap}
+    /* team controls: keep blue left / red right, optimize label + note below */
+    .teamctrl{grid-template-columns:1fr 1fr;grid-template-areas:"our opp" "mid mid";gap:9px 10px;padding:12px}
+    .tc-col.our{grid-area:our} .tc-col.opp{grid-area:opp} .tc-mid{grid-area:mid}
+    .tc-title{font-size:14px}
     .optbtn{padding:10px 12px}
-    .optbar-title{font-size:16px}
-    /* sticky scorebar */
-    .stickybar .sb{font-size:18px;padding:7px 0;min-width:0;flex:0 0 84px}
-    .stickybar .sb-mid{font-size:11.5px;padding:0 8px}
+    /* sticky scorebar — constrain the centre so the title wraps and the team names keep room */
+    .stickybar .sb{padding:5px 7px;min-width:0;flex:1 1 0;gap:4px}
+    .stickybar .sb-pts{font-size:18px} .stickybar .sb-name{font-size:10.5px;max-width:72px}
+    .stickybar .sb-mid{flex:0 1 auto;max-width:128px;padding:0 5px;gap:6px}
+    .stickybar .sb-logo{height:21px} .stickybar .sb-title{font-size:11.5px;line-height:1.06;white-space:normal}
     .stage{margin-top:22px}
     .stage-head h2{font-size:19px} .stage-head .hint{font-size:11.5px}
     .panel-body{padding:11px}
@@ -289,9 +306,9 @@
   <noscript><div style="background:#FBF1D9;color:#A8740a;padding:14px 16px;text-align:center;font-weight:600;font-family:system-ui,sans-serif">This tool needs JavaScript to run. It looks like it's being shown in a file preview. Tap the ⋮ / share menu and choose “Open in browser” (Safari or Chrome) to use it.</div></noscript>
   <!-- slim sticky scorebar: appears when you scroll past the header -->
   <div class="stickybar" id="stickybar" aria-hidden="true">
-    <span class="sb our" id="sb-our">–</span>
-    <span class="sb-mid"><span class="sb-title">FFF Don't Hide Legend Cup</span><span class="sb-verdict" id="sb-verdict">—</span></span>
-    <span class="sb opp" id="sb-opp">–</span>
+    <span class="sb our"><span class="sb-name" id="sb-our-name">Blue</span><span class="sb-pts" id="sb-our">–</span></span>
+    <span class="sb-mid"><img class="sb-logo" id="sb-logo" alt="" aria-hidden="true"><span class="sb-title">FFF Don't Hide Legend Cup</span></span>
+    <span class="sb opp"><span class="sb-pts" id="sb-opp">–</span><span class="sb-name" id="sb-opp-name">Red</span></span>
   </div>
 
   <header class="banner">
@@ -311,28 +328,42 @@
       <label for="preset">Try a scenario</label>
       <select id="preset"></select>
       <button class="btn ghost" id="reset">Reset to defaults</button>
-      <div class="locks" role="group" aria-label="Lock a team's lineup across scenarios">
-        <label class="lockchk our" title="Keep this team's lineup fixed when you switch the scenario above — only the other team changes."><input type="checkbox" id="lock-our"><span class="lk-dot"></span><span class="lk-txt">🔒 Lock <span id="lock-our-name">Blue</span></span></label>
-        <label class="lockchk opp" title="Keep this team's lineup fixed when you switch the scenario above — only the other team changes."><input type="checkbox" id="lock-opp"><span class="lk-dot"></span><span class="lk-txt">🔒 Lock <span id="lock-opp-name">Red</span></span></label>
-      </div>
     </div>
-    <div class="lockhint" id="lockhint">Lock a team to keep its lineup fixed, then switch scenarios above to compare it against each opponent combo.</div>
 
-    <!-- Auto-optimize -->
-    <div class="optbar">
-      <span class="optbar-title">⚡ Auto-optimize</span>
-      <div class="optbar-btns">
+    <!-- Team controls: lock + optimize, blue (left) vs red (right) — matches the scoreboard -->
+    <div class="teamctrl">
+      <div class="tc-col our">
+        <label class="lockchk our" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-our"><span class="lk-txt">🔒 Lock <span id="lock-our-name">Blue</span></span></label>
         <button class="optbtn our" id="opt-our" data-act="optimize" data-side="our">Best Blue lineup</button>
+      </div>
+      <div class="tc-mid">
+        <span class="tc-title">⚡ Auto-optimize</span>
+        <div class="optbar-note" id="optnote"></div>
+      </div>
+      <div class="tc-col opp">
+        <label class="lockchk opp" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-opp"><span class="lk-txt">🔒 Lock <span id="lock-opp-name">Red</span></span></label>
         <button class="optbtn opp" id="opt-opp" data-act="optimize" data-side="opp">Best Red lineup</button>
       </div>
-      <div class="optbar-note" id="optnote"></div>
     </div>
+    <div class="lockhint" id="lockhint">Lock a team to pin its lineup — times stay editable, but runners can't be added or removed. Switching scenarios then only changes the other team, so you can compare your locked team against each opponent combo.</div>
 
     <!-- Final score -->
+    <!-- branded result header so a screenshot of the result captures the game name + logo -->
+    <div class="result-brand">
+      <img class="rb-logo" id="rb-logo" alt="" aria-hidden="true">
+      <span class="rb-title">FFF Don't Hide Legend Cup <span class="rb-yr">2026</span></span>
+    </div>
+
     <div class="scorestrip">
-      <div class="sc our"><div class="sc-info"><span class="lab" id="sc-our-name">TT &amp; SLK team</span><span class="sub" id="sc-our-time">—</span></div><div class="ptsbox"><span class="pts" id="sc-our">–</span><span class="winp-inline" id="sc-our-win" title="Win chance vs the opponent lineup on the board, over many races with ±10 s/km day-to-day pace variation."></span></div></div>
+      <div class="sc our"><div class="sc-info"><span class="lab" id="sc-our-name">TT &amp; SLK team</span><span class="sub" id="sc-our-time">—</span></div><div class="ptsbox"><span class="pts" id="sc-our">–</span></div></div>
       <div class="midv"><span class="vs">VS</span><span class="verdict none" id="verdict">set lineups</span></div>
-      <div class="sc opp"><div class="sc-info"><span class="lab" id="sc-opp-name">CM &amp; SIN team</span><span class="sub" id="sc-opp-time">—</span></div><div class="ptsbox"><span class="pts" id="sc-opp">–</span><span class="winp-inline" id="sc-opp-win" title="Win chance vs the opponent lineup on the board, over many races with ±10 s/km day-to-day pace variation."></span></div></div>
+      <div class="sc opp"><div class="sc-info"><span class="lab" id="sc-opp-name">CM &amp; SIN team</span><span class="sub" id="sc-opp-time">—</span></div><div class="ptsbox"><span class="pts" id="sc-opp">–</span></div></div>
+    </div>
+    <div class="winrow" id="winrow" title="Race-day Monte-Carlo win chance vs the opponent lineup on the board — many races, each leg jittered ±10 s/km.">
+      <span class="wr-cap">Race-day win chance</span>
+      <span class="wr our" id="wr-our">—</span>
+      <span class="wr-sep">vs</span>
+      <span class="wr opp" id="wr-opp">—</span>
     </div>
 
     <!-- Finish board -->
@@ -348,8 +379,8 @@
           &nbsp;&nbsp;• <strong>10K-trio</strong> — the leg-1 runner runs the 10 km; his latter 5K is averaged with a leg-2 runner's 5K: <code>5K + (latter-5K + partner-5K)/2</code>.<br>
           <strong>DNF</strong> (toggle on a team) is placed last for 0 pts and takes an extra <code>−5</code>.<br>
           <strong>Actual times</strong> — both the <em>team total</em> (on each card) and each runner's <em>leg time</em> (next to their name) are editable. Editing the team total splits it proportionally across the runners; editing one runner's leg holds the team total and rebalances the partner — and the runner's pace updates to match.<br>
-          <strong>Lock</strong> (toggle on a team) — the optimiser keeps that exact team fixed; e.g. put your chosen 10 km runner alone on a team and lock it, then optimise the rest.<br>
-          <strong>🔒 Lock Blue / Lock Red</strong> (by the scenario picker) — pins that whole team's lineup so changing the scenario only swaps the <em>other</em> team, and disables that side's optimise button. Lock your side, then cycle the opponent combos to compare scores.<br>
+          <strong>Lock</strong> (toggle on a team) — pins that exact team: the optimiser won't touch it and its runners can't be added or removed (you can still edit times). E.g. put your chosen 10 km runner alone on a team and lock it, then optimise the rest.<br>
+          <strong>🔒 Lock Blue / Lock Red</strong> (the big team lock) — pins that whole team: it ticks every one of that team's small-team locks, disables its optimise button, and keeps it fixed when you switch scenarios so only the <em>other</em> team changes. Lock your side, then cycle the opponent combos to compare scores.<br>
           <strong>Win %</strong> (next to each score) — a race-day Monte-Carlo win chance <em>vs the opponent lineup currently on the board</em>, over many races with each leg jittered ±10 s/km.<br>
           <strong>Tie on points</strong> → the team with the faster combined time wins.
         </div>
@@ -603,7 +634,8 @@ function applyPreset(p){
 
 /* =================== RENDER =================== */
 const el=id=>document.getElementById(id);
-function syncLockLabels(){const o=el('lock-our-name'),p=el('lock-opp-name');if(o)o.textContent=state.our.name||'Blue';if(p)p.textContent=state.opp.name||'Red';}
+function syncLockLabels(){const o=el('lock-our-name'),p=el('lock-opp-name');if(o)o.textContent='Blue';if(p)p.textContent='Red';}   // short, colour-coded labels (not the full team name)
+function stickyName(n){return String(n||'').trim().replace(/\s+team$/i,'').trim()||n;}   // compact name for the slim sticky bar
 function syncLockUI(){['our','opp'].forEach(s=>{const b=el(s==='our'?'opt-our':'opt-opp');if(!b)return;const locked=sideLocked(s);b.disabled=locked;b.classList.toggle('is-locked',locked);b.title=locked?'This team is locked — untick its lock by the scenario picker to optimise.':'';});}
 function renderAll(){renderRoster('our');renderRoster('opp');renderLineup('our');renderLineup('opp');renderPoints();renderResults();syncLockLabels();syncLockUI();}
 
@@ -631,14 +663,15 @@ function renderRoster(side){
     </div>`;
 }
 
-function chip(side,r,inPool){
+function chip(side,r,inPool,locked){
   // bench chips show a static 5K; lineup chips make the leg time editable (drives the runner's pace)
   const time=inPool
     ? `<span class="pace">${fmtTime(fiveK(r.p))}</span>`
     : `<input class="pace leg-edit" data-act="edit-leg" data-side="${side}" data-id="${r.id}" value="${fmtTime(fiveK(r.p))}" inputmode="numeric" aria-label="${escapeAttr(r.name)} leg time" title="actual 5 km leg time — sets this runner's pace and rebalances the partner to keep the team total">`;
-  return `<span class="chip" ${inPool?`data-act="pool-add" data-side="${side}" data-id="${r.id}"`:''}>
+  // a locked team keeps its runners — no remove button
+  return `<span class="chip${locked?' chip-locked':''}" ${inPool?`data-act="pool-add" data-side="${side}" data-id="${r.id}"`:''}>
     <span>${escapeHtml(r.name)}</span>${time}
-    ${inPool?'':`<button class="cx" data-act="member-remove" data-side="${side}" data-id="${r.id}" title="remove">×</button>`}
+    ${(inPool||locked)?'':`<button class="cx" data-act="member-remove" data-side="${side}" data-id="${r.id}" title="remove">×</button>`}
   </span>`;
 }
 
@@ -650,9 +683,9 @@ function renderLineup(side){
   const cards=T.teams.map((t,idx)=>{
     const members=t.memberIds.map(id=>resolve(side,id)).filter(Boolean);
     const tt=teamTime(members,t.leg1Id,t.dnf,t.noshow);
-    const memChips=legSorted(members).map(m=>chip(side,m,false)).join('');
+    const memChips=legSorted(members).map(m=>chip(side,m,false,t.lock)).join('');
     const addOpts=un.map(r=>`<option value="${r.id}">${escapeHtml(r.name)} (${fmtTime(fiveK(paceToSec(r.pace)??0))})</option>`).join('');
-    const addSel=un.length?`<select class="addsel" data-act="member-add" data-side="${side}" data-team="${t.id}" aria-label="add runner to team"><option value="">+ add runner…</option>${addOpts}</select>`:'';
+    const addSel=(un.length&&!t.lock)?`<select class="addsel" data-act="member-add" data-side="${side}" data-team="${t.id}" aria-label="add runner to team"><option value="">+ add runner…</option>${addOpts}</select>`:'';   // locked teams don't accept new runners
     let leg1Ctrl='';
     if((members.length>=3 || (members.length===2 && t.noshow)) && !t.dnf){
       const lbl=members.length===2?'10K':'leg 1';
@@ -676,14 +709,14 @@ function renderLineup(side){
           ${(tt.t!=null&&isFinite(tt.t)&&members.length>=1&&!t.dnf)
             ? `<input class="tcard-time tt-edit" data-act="edit-total" data-side="${side}" data-team="${t.id}" value="${fmtTime(tt.t)}" inputmode="numeric" aria-label="Team ${idx+1} total time" title="actual team total time — splits proportionally across the runners">`
             : `<span class="tcard-time">${tt.t==null?'—':fmtTime(tt.t)}</span>`}
-          <button class="x" data-act="del-team" data-side="${side}" data-team="${t.id}" title="remove team">×</button>
+          ${t.lock?'':`<button class="x" data-act="del-team" data-side="${side}" data-team="${t.id}" title="remove team">×</button>`}
         </span>
       </div>
       <div class="tcard-body">
         ${memChips}${addSel}
         <span class="ctrls" style="margin-left:auto">
           ${leg1Ctrl}
-          ${members.length>=1?`<label class="dnfbox" title="lock — the optimiser keeps this exact team (use it to pin a runner / the 10K solo)"><input type="checkbox" data-act="toggle-lock" data-side="${side}" data-team="${t.id}" ${t.lock?'checked':''}> lock</label>`:''}
+          ${members.length>=1?`<label class="dnfbox" title="lock — keeps this exact team (the optimiser won't touch it, and its runners can't be added or removed)"><input type="checkbox" data-act="toggle-lock" data-side="${side}" data-team="${t.id}" ${t.lock?'checked':''} ${sideLocked(side)?'disabled':''}> lock</label>`:''}
           <label class="dnfbox"><input type="checkbox" data-act="toggle-dnf" data-side="${side}" data-team="${t.id}" ${t.dnf?'checked':''}> DNF</label>
         </span>
       </div>
@@ -703,10 +736,10 @@ function renderLineup(side){
       ${nsBanner}
       <div class="pool"><span class="pool-label">Bench</span>${poolChips}</div>
       ${cards}
-      <div class="lineup-actions">
+      ${sideLocked(side)?'':`<div class="lineup-actions">
         <button class="btn btn-sm" data-act="add-team" data-side="${side}">+ Add team</button>
         <button class="btn btn-sm ghost" data-act="clear-lineup" data-side="${side}">Clear</button>
-      </div>
+      </div>`}
     </div>`;
 }
 
@@ -726,22 +759,23 @@ function renderResults(){
   if(res.rows.length===0){v.className='verdict none';v.textContent='set lineups';}
   else if(res.winner==='tie'){v.className='verdict tie';v.textContent='Dead tie';}
   else{v.className='verdict '+res.winner;v.textContent=(res.winner==='our'?state.our.name:state.opp.name)+' win';}
-  // sticky bar
-  const sbo=el('sb-our'),sbp=el('sb-opp'),sbv=el('sb-verdict');
+  // sticky bar — team name next to its score (verdict dropped; the scores make it obvious)
+  const sbo=el('sb-our'),sbp=el('sb-opp'),sbon=el('sb-our-name'),sbpn=el('sb-opp-name');
   if(sbo)sbo.textContent=trim(res.ourPts);
   if(sbp)sbp.textContent=trim(res.oppPts);
-  if(sbv)sbv.textContent = res.rows.length===0 ? 'set lineups' : (res.winner==='tie' ? 'Dead tie' : (res.winner==='our'?state.our.name:state.opp.name)+' win');
+  if(sbon)sbon.textContent=stickyName(state.our.name);
+  if(sbpn)sbpn.textContent=stickyName(state.opp.name);
 
-  // board win % (deferred so typing/dragging stays snappy)
-  const tok=++winTok, swin=el('sc-our-win'), spwin=el('sc-opp-win');
+  // race-day win % (deferred so typing/dragging stays snappy) — shown in its own row under the scores
+  const tok=++winTok, swin=el('wr-our'), spwin=el('wr-opp'), wrow=el('winrow');
   const playable=res.rows.some(r=>r.side==='our')&&res.rows.some(r=>r.side==='opp');
-  if(swin&&!playable){swin.textContent='';spwin.textContent='';}
+  if(wrow)wrow.classList.toggle('hidden',!playable);
   if(playable){
-    if(swin)swin.textContent='…';
+    if(swin)swin.textContent='…'; if(spwin)spwin.textContent='…';
     setTimeout(()=>{
       if(tok!==winTok) return;                       // a newer render superseded this
       const wp=winProbBoard(2000);
-      if(wp){ if(swin)swin.textContent='win '+Math.round(wp.our*100)+'%'; if(spwin)spwin.textContent='win '+Math.round(wp.opp*100)+'%'; }
+      if(wp){ if(swin)swin.textContent=Math.round(wp.our*100)+'%'; if(spwin)spwin.textContent=Math.round(wp.opp*100)+'%'; }
     },0);
   }
 
@@ -905,7 +939,9 @@ document.addEventListener('change',e=>{
   if(t.dataset.act==='toggle-lock'){const team=findTeam(side,+t.dataset.team);if(team){team.lock=t.checked;renderLineup(side);renderResults();}return;}
   if(t.dataset.act==='edit-total'){editTeamTotal(side,+t.dataset.team,t.value);return;}
   if(t.dataset.act==='edit-leg'){editMemberLeg(side,+t.dataset.id,t.value);return;}
-  if(t.classList.contains('r-ns')){const r=runnerById(side,+t.dataset.id);if(r){r.ns=t.checked;
+  if(t.classList.contains('r-ns')){const r=runnerById(side,+t.dataset.id);if(r){
+    if(t.checked && state[side].teams.some(tm=>tm.lock&&tm.memberIds.includes(r.id))){t.checked=false;el('optnote').textContent='Unlock that runner’s team before marking a no-show.';return;}  // a locked team keeps its runners
+    r.ns=t.checked;
     if(r.ns){state[side].teams.forEach(tm=>{tm.memberIds=tm.memberIds.filter(x=>x!==r.id);if(tm.leg1Id===r.id)tm.leg1Id=null;});}  // a no-show runner leaves the lineup
     renderRoster(side);renderLineup(side);renderResults();}return;}
 });
@@ -914,10 +950,10 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]'); if(!b)return;
   const act=b.dataset.act, side=b.dataset.side;
   if(act==='pool-add'){addToBestSpot(side,+b.dataset.id);return;}
-  if(act==='member-remove'){removeMember(side,+b.dataset.id);return;}
-  if(act==='del-team'){state[side].teams=state[side].teams.filter(t=>t.id!==+b.dataset.team);renderLineup(side);renderResults();return;}
-  if(act==='add-team'){state[side].teams.push({id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false,lock:false});renderLineup(side);renderResults();return;}
-  if(act==='clear-lineup'){state[side].teams=[];renderLineup(side);renderResults();el('optnote').textContent='';return;}
+  if(act==='member-remove'){const tm=state[side].teams.find(t=>t.memberIds.includes(+b.dataset.id));if(tm&&tm.lock)return;removeMember(side,+b.dataset.id);return;}   // can't remove from a locked team
+  if(act==='del-team'){const tm=findTeam(side,+b.dataset.team);if(tm&&tm.lock)return;state[side].teams=state[side].teams.filter(t=>t.id!==+b.dataset.team);renderLineup(side);renderResults();return;}   // can't delete a locked team
+  if(act==='add-team'){if(sideLocked(side))return;state[side].teams.push({id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false,lock:false});renderLineup(side);renderResults();return;}
+  if(act==='clear-lineup'){state[side].teams=state[side].teams.filter(t=>t.lock);renderLineup(side);renderResults();el('optnote').textContent='';return;}   // keep locked teams
   if(act==='optimize'){optimize(side);return;}
   if(act==='add-runner'){state[side].runners.push({id:++uid,name:'New',pace:'5:00',actSec:null,ns:false});renderRoster(side);renderLineup(side);renderResults();return;}
   if(act==='del-runner'){delRunner(side,+b.dataset.id);return;}
@@ -925,16 +961,17 @@ document.addEventListener('click',e=>{
 
 function findTeam(side,id){return state[side].teams.find(t=>t.id===id);}
 function addMember(side,teamId,runnerId){
-  // remove from any other team first
-  state[side].teams.forEach(t=>t.memberIds=t.memberIds.filter(x=>x!==runnerId));
-  const t=findTeam(side,teamId); if(!t)return;
+  const t=findTeam(side,teamId); if(!t||t.lock)return;   // don't add into a locked team
+  // remove from any other unlocked team first (locked teams keep their runners)
+  state[side].teams.forEach(o=>{if(!o.lock)o.memberIds=o.memberIds.filter(x=>x!==runnerId);});
   t.memberIds.push(runnerId);
   if(t.memberIds.length>=3 && !t.leg1Id){const sorted=t.memberIds.slice().sort((a,b)=>(paceToSec(runnerById(side,a).pace))-(paceToSec(runnerById(side,b).pace)));t.leg1Id=sorted[0];}
   renderLineup(side);renderResults();
 }
 function addToBestSpot(side,runnerId){
-  // add to the first team with < 2 members, else make a new team
-  let t=state[side].teams.find(t=>t.memberIds.length<2 && !t.dnf);
+  if(sideLocked(side))return;   // the whole side is pinned — don't grow it from the bench
+  // add to the first unlocked team with < 2 members, else make a new team
+  let t=state[side].teams.find(t=>t.memberIds.length<2 && !t.dnf && !t.lock);
   if(!t){t={id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false,lock:false};state[side].teams.push(t);}
   addMember(side,t.id,runnerId);
 }
@@ -943,6 +980,7 @@ function removeMember(side,runnerId){
   renderLineup(side);renderResults();
 }
 function delRunner(side,id){
+  if(state[side].teams.some(t=>t.lock&&t.memberIds.includes(id))){el('optnote').textContent='Unlock that runner’s team before deleting them.';return;}  // can't delete a runner who is on a locked team
   state[side].runners=state[side].runners.filter(r=>r.id!==id);
   state[side].teams.forEach(t=>{t.memberIds=t.memberIds.filter(x=>x!==id);if(t.leg1Id===id)t.leg1Id=null;});
   renderRoster(side);renderLineup(side);renderResults();
@@ -952,7 +990,16 @@ function delRunner(side,id){
 el('preset').innerHTML=PRESETS.map((p,i)=>`<option value="${i}">${p.label}</option>`).join('');
 el('preset').addEventListener('change',e=>applyPreset(PRESETS[+e.target.value]));
 el('reset').addEventListener('click',()=>{el('lock-our').checked=false;el('lock-opp').checked=false;el('preset').value='0';applyPreset(PRESETS[0]);});
-['lock-our','lock-opp'].forEach(id=>el(id).addEventListener('change',syncLockUI));   // a locked side can't be optimised
+// master team-lock: ticks/unticks every small-team lock on that side, disables its optimise, and pins it across scenarios.
+// Individual small-team locks set before the master goes on are remembered (t._ulock) and restored when it goes off.
+['lock-our','lock-opp'].forEach(id=>el(id).addEventListener('change',e=>{
+  const side=id==='lock-our'?'our':'opp';
+  if(e.target.checked) state[side].teams.forEach(t=>{t._ulock=!!t.lock;t.lock=true;});
+  else state[side].teams.forEach(t=>{t.lock=('_ulock'in t)?t._ulock:false;delete t._ulock;});
+  syncLockUI();renderLineup(side);renderResults();
+}));
+// reuse the header logo bitmap in the sticky bar (no second copy of the data URI)
+(function(){const src=document.querySelector('.brand .logo');if(!src)return;['sb-logo','rb-logo'].forEach(id=>{const d=el(id);if(d)d.src=src.src;});})();
 
 state=freshState();
 applyPreset(PRESETS[0]);
