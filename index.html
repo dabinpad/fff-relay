@@ -357,7 +357,7 @@
     <div class="toolbar">
       <span class="tb-label"><label for="preset">Try a scenario</label><span class="help help-flush"><button type="button" class="help-btn" aria-label="About scenarios">?</button><span class="help-pop">Ready-made matchups — pick one to load both lineups. Lock a team (below) to keep it fixed and compare it against each opponent setup.</span></span></span>
       <select id="preset"></select>
-      <button class="btn ghost" id="clear-times" title="Set every runner's pace and 5K to 0:00 (keeps the team lineups) so you can type in the real race times">Clear all times</button>
+      <button class="btn ghost" id="clear-times" title="Reset every runner's pace and 5K to 0:00 (keeps the team lineups) so you can type in the real race times">Clear record</button>
     </div>
     <div class="teamctrl">
       <div class="tc-col our">
@@ -1072,6 +1072,7 @@ function delRunner(side,id){
 }
 // zero every runner's pace & 5K (keeps the team lineups) so the board becomes a blank scorecard to fill in
 function clearAllTimes(){
+  if(!window.confirm('Clear record?\n\nThis resets every runner’s pace and 5K to 0:00 so you can type in the actual race times. The team lineups are kept.\n\nTo bring the default times back, pick a scenario from the dropdown.')) return;
   ['our','opp'].forEach(side=>state[side].runners.forEach(r=>{r.pace='0:00';r.actSec=null;}));
   el('optnote').textContent='';
   renderAll();

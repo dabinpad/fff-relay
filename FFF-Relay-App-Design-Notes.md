@@ -58,9 +58,11 @@ Total on the course: **12 small teams** (6 per side).
 
 ### No-show / DNF penalties (modelled in the app)
 - **No-show (1 runner absent):** that small team's points are **capped at a maximum of 6** *and* take **−5**.
-  The team can be fielded two ways and the optimiser tries both, keeping the better:
-  - **Solo** — a teammate runs the 10 km alone (`2×5K`), or
-  - **10K-trio** — the leg-1 runner runs 10 km and a teammate is buried on leg 2.
+  The present teammate runs the full 10 km:
+  - **Solo** — one present runner runs the 10 km alone (`2×5K`), or
+  - **10K-trio** — the leg-1 runner runs 10 km and another *present* teammate is buried on leg 2.
+- **The no-show runner stays visible** on that team as a non-running marker (see §5/§7) — the team is a
+  no-show team the moment it carries an absent runner; the penalty applies automatically (no Optimise needed).
 - **DNF / two no-shows:** team placed last (0 pts) plus an extra **−5**.
 
 ---
@@ -140,15 +142,24 @@ current Red lineup — the cap + the aggregate gap are too large to overcome on 
 
 - **One file, zero dependencies.** No external scripts/fonts/CDN. Native Apple system fonts. The cup logo
   (an interlocking "4-F" emblem) is embedded once as a **base64 PNG** in the header `<img class="logo">`;
-  the **sticky bar** and the **result header** reuse the same bitmap by copying `src` at init (no second copy
-  in the source).
+  the **sticky bar** reuses the same bitmap by copying `src` at init (no second copy in the source). The page
+  header doubles as the branding above the result (centered on mobile), so a screencap is self-contained —
+  the earlier separate "result header" was removed as a duplicate.
 - **Single source of truth for speed = the effective 5K.** Each runner has a `pace` (mm:ss/km) and an
   optional exact override `actSec` (a 5K time in seconds). `resolve()` exposes an *effective pace*
   `p = actSec/5` when an override is set, else `paceToSec(pace)`, so every `fiveK(p)` stays exact. Editing a
-  pace clears the override; editing a time sets it.
+  pace clears the override; entering a 5K sets it (and writes the derived pace back). `parseTimeInput()`
+  normalises shorthand (`415`→4:15, `2115`→21:15, `4`→4:00) on every time field.
+- **No-show model (members-driven).** A team is a no-show team if it carries the `noshow` flag **or any
+  member has `ns:true`**. `teamTime()`/`teamLegs()` score it from the **present** runners only — the absent
+  (ns) members are non-running *markers* that keep the no-show runner visible on the team. 1 present → solo
+  (`2×5K`); ≥2 present → leg-1 runs 10 km + the rest buried (`1.5·r + 0.5·others`). Marking NS keeps the
+  runner on a no-show team (`ensureNoShowTeam`), so the cap+penalty apply immediately; presets call
+  `markNoShowTeams`, and the optimiser re-attaches the ns runner to its capped team as a marker.
 - **Scoring engine (vanilla JS):** `teamTime()` computes pair/trio/solo/10k-trio times; `computeResults()`
   ranks all 12 teams, applies the points table, splits ties (half-points), applies the no-show cap+penalty,
-  and resolves the winner (points, then aggregate time, then "Dead tie").
+  and resolves the winner (points, then aggregate time, then "Dead tie"). When **every** runner's effective
+  5K is 0 (`isBlankRecord`, after *Clear record*), the board renders a **blank scorecard** instead of ranking.
 - **Optimizer (`optimize(side)`):** brute-forces the side's partitions (pairs + trio + the forced no-show
   team, trying **both** solo and 10K-trio for each no-show) to maximise points **against the other side's
   current lineup**. It honours per-team locks (keeps locked teams fixed) and is a **no-op when that side is
@@ -170,15 +181,18 @@ current Red lineup — the cap + the aggregate gap are too large to overcome on 
 
 ## 6. Feature set (current)
 
-- **Editable rosters** (Runner / Pace / 5K / **NS** checkbox). Tick **NS** to mark a runner absent.
+- **Editable rosters** (Runner / **Pace** / **5K** / **NS** checkbox). Pace **and** 5K are editable and
+  **bidirectional** (enter a pace → 5K fills in; enter a 5K → pace fills in). Tick **NS** to mark a runner absent.
+- **Smart time entry** on every time field — type digits + Enter: `415`→4:15, `2115`→21:15, `4`→4:00.
 - **Card-based lineup builder:** pairs / trio (leg-1 selector) / solo / 10K-trio; **DNF** toggle; **per-team
   lock**; an editable **team total time** and editable **per-runner leg times**.
 - **Editable actual times** (single source of truth = pace):
   - Edit a **team total** → splits **proportionally** across its runners.
   - Edit a **runner's leg** → holds the team total and **rebalances the partner(s)**; the runner's pace
     updates to match. Roster, board, and win% all recompute live.
-- **No-show handling:** mark NS in the roster; **Optimise** fields one capped no-show team per NS, trying
-  solo vs 10K-trio and keeping the better.
+- **No-show handling:** tick **NS** in the roster — the runner **stays visible** on a no-show team (a dashed
+  `NO-SHOW` marker chip), the team auto-becomes capped (`−5`, max 6) with a present teammate on the 10 km, and
+  the penalty applies **immediately**. **Optimise** still finds the lowest-cost sacrifice (solo vs 10K-trio).
 - **Locks (two levels):**
   - **Per-team lock** (on a card) — the optimiser keeps that exact team fixed; its runners can't be
     added/removed (times stay editable). Use it to pin a chosen 10 km runner before optimising.
@@ -186,14 +200,18 @@ current Red lineup — the cap + the aggregate gap are too large to overcome on 
     rewrites the *other* team, its Optimise button is disabled, every small-team lock is auto-checked, and
     its composition is frozen (add/remove/clear hidden; NS/delete of a locked-in runner blocked). Restores
     individual locks when released. **This is the "compare my lineup vs each opponent combo" tool.**
-- **Live finish board:** all 12 teams ranked, with position, colored medal, time, trio/solo/DNF flag, and
-  net points (no-show rows show their net −x, not the capped raw).
+- **Live finish board:** all 12 teams ranked, with position, colored medal, time, trio/no-show/DNF flag, and
+  net points (no-show rows show their net −x, not the capped raw). When the record is blank (after *Clear
+  record*) it becomes a **scorecard** — teams in lineup order with dashes for rank/time/points and no winner.
 - **Top scoreboard:** big points per team + "combined H:MM:SS" subline + a verdict pill.
-- **Race-day win-chance row** under the scoreboard (colour-coded pills; hidden when there's no valid matchup).
-- **Branded result header** (logo + "FFF Don't Hide Legend Cup 2026") above the scoreboard so one screenshot
-  captures name + logo + scores + win chance + finish board for sharing.
-- **Sticky score bar** on scroll: logo + game name (centre), each team's name beside its score (blue left /
-  red right).
+- **Race-day win-chance row** *below the finish board* (colour-coded pills; hidden when blank/no matchup) — so
+  it's outside a clean result screencap.
+- **Result screencap** = the centered page header (logo + "FFF Don't Hide Legend Cup 2026") → scoreboard →
+  finish board, all stacked at the top. The controls sit **below** the board so they're out of frame.
+- **Sticky score bar** on scroll: logo + single-line game title (centre), each team's name beside its score
+  (blue left / red right).
+- **Clear record** (by the scenario picker) — after a confirm, zeroes every pace/5K (keeps the lineups) to
+  enter the real race times; the board falls back to the blank scorecard. Pick a scenario to restore defaults.
 - **Scenario presets (dropdown):**
   1. **★ Announced final lineup (TT & SLK vs CM & SIN)** ← **default**, FF no-show → 30.5–42.5
   2. *Toughest — Red's optimal spread (Blue best ≈ 31)*
@@ -201,9 +219,11 @@ current Red lineup — the cap + the aggregate gap are too large to overcome on 
   4. *Red spreads its 3 aces (33)*
   5. *Red stacks both aces in one pair (31.5)*
 
-  Every preset bakes in **FF as the no-show**; presets 2–5 load Red's archetype + Blue's best response.
-- **Auto-optimize** bar (the two best-lineup buttons), laid out **blue-left / red-right** to mirror the
-  scoreboard. **Reset to defaults** (clears locks too).
+  Every preset bakes in **FF as the no-show** (FF rides the no-show team, e.g. `SLK + FF`); presets 2–5 load
+  Red's archetype + Blue's best response.
+- **Controls live below the finish board:** the scenario picker + **Clear record**, then the **Auto-optimize**
+  panel (two best-lineup buttons + the two whole-team locks), laid out **blue-left / red-right** to mirror the
+  scoreboard. Concise **"?" help popovers** replace the old inline hints (scenario, optimise/lock, §1, §2).
 
 ---
 
@@ -224,16 +244,29 @@ Choices that should *not* be silently undone.
 - Times are paces in different units; an exact `actSec` override keeps team totals exact while the roster
   pace shows a clean rounded value. Team-total edits scale **proportionally**; runner edits **hold the
   team total** and rebalance partners (confirmed with the user: "proportional" + "total stays fixed").
+- **Pace ↔ 5K are bidirectional in the roster**, and **smart shorthand** (`parseTimeInput`) applies on every
+  time field — a power-user nicety for entering race-day splits fast.
+
+### No-show keeps the runner visible (confirmed with the user)
+- Marking NS must **not** silently bench the runner or rely on Optimise to apply the penalty (that was the
+  reported bug). Instead the no-show runner **stays on a no-show team as a marker** and the cap+penalty apply
+  automatically. The score is unchanged because **ns members never contribute time** (`teamTime` scores from
+  present runners only) — `SLK + FF` computes exactly as SLK solo. Don't revert to "benching the no-show".
+
+### Clear record + blank scorecard (confirmed with the user)
+- **Clear record** (a confirm-gated reset) zeroes paces/5Ks but **keeps the lineups**, for typing in real
+  results. With everything at 0 the board is a **blank scorecard** (teams in lineup order, dashes for
+  rank/time/points, no winner) rather than a broken all-tied ranking. Re-pick a scenario to restore defaults.
 
 ### Win probability placement
 - Win% was first inline next to the big score (looked cramped), then moved to its **own labelled row**
   ("RACE-DAY WIN CHANCE · x% vs y%") below the scoreboard. Keep it out of the big-number cards.
 
-### Shareable result
-- A **branded result header** sits directly above the scoreboard so a single screencap of the result is
-  self-contained (name + logo + scores + win + board), independent of scroll position / the sticky bar.
-  This intentionally duplicates the page header's logo+name — that's the point (the result block stands
-  alone for sharing).
+### Shareable result (layout)
+- The **result comes first**: page header (logo + title, centered on mobile) → scoreboard → finish board.
+  The **controls block moved below the board**, and the once-separate "result header" was **removed** as a
+  duplicate — the page header now does that job, so a top-down screencap is the shareable result.
+- The **win-chance row sits below the board** so it's outside that screencap.
 
 ### Controls & sticky bar layout
 - Lock + Optimise controls are laid out **blue-left / red-right** to match the scoreboard's two cards.
@@ -295,6 +328,18 @@ Choices that should *not* be silently undone.
 17. **Display polish:** controls blue-left/red-right; sticky bar (logo + bigger title + name-beside-score);
     **branded result header** for a clean shareable screencap; win% relocated to its own labelled row;
     mobile toolbar (dropdown + Reset on one line); short "Lock Blue / Lock Red" chips.
+18. **Win% below the board**; **purple** checkered band over the finish board; sticky title forced to one
+    line; concise **"?" help popovers** replace inline hints.
+
+### Phase C — capture & race-day data entry
+19. **Smart time entry** (`415`→4:15, `2115`→21:15, `4`→4:00) on all time fields; **roster 5K editable and
+    bidirectional** with pace.
+20. **No-show keeps the runner visible** on a no-show team with the penalty auto-applied (fixes the
+    "no penalty after manual edit" bug); ns members are non-running markers; presets keep FF visible and the
+    optimiser re-attaches it.
+21. **Layout for clean screencaps:** moved the whole control block **below** the finish board; **removed the
+    duplicate result header**; **centered the page header on mobile**.
+22. **Clear record** (confirm-gated) zeroes all paces/5Ks (keeps lineups) → **blank scorecard** board.
 
 ---
 
@@ -329,7 +374,7 @@ Choices that should *not* be silently undone.
 3. **One-click equilibrium / minimax.** Alternating best-responses oscillate by design; the strategic answer
    is the robust framing in §4, not a solver.
 4. **Save/share a result image** (beyond the manual screencap) — e.g. render-to-canvas export of the result
-   block. The branded header already makes manual screenshots clean.
+   block. The result-first layout (centered header → scores → board) already makes manual screenshots clean.
 
 ---
 
@@ -341,9 +386,11 @@ Choices that should *not* be silently undone.
   **Blue's FF no-show forces a capped −5 team**, so Blue loses the announced matchup. Sacrifice the slow
   walker (SLK), keep the aces in pairs.
 - **Don't undo:** whole-second time rounding; intentional half-points; faster-runner-on-leg-2; the real 4-F
-  emblem logo; **pace as the single source of truth** for editable times; the **lock invariants** (locked =
-  composition frozen, times editable; master lock cascades + restores via `_ulock`); win% in its own row; the
-  branded result header; controls/sticky blue-left/red-right.
+  emblem logo; **pace as the single source of truth** for editable times (5K↔pace bidirectional; smart
+  shorthand); **no-show keeps the runner visible** (ns members are non-running markers; penalty auto-applies —
+  don't go back to benching); the **lock invariants** (locked = composition frozen, times editable; master
+  lock cascades + restores via `_ulock`); the result-first layout (header → scores → board, controls below,
+  win% below the board); **Clear record** + blank scorecard; controls/sticky blue-left/red-right.
 - **Not a bug:** the optimizer is a **best-response vs the other side's current lineup**; clicking both
   buttons oscillates by design (§5/§10).
 - **To publish:** merge `claude/team-roster-optimization-qjmgrg` into `main` and push; Pages serves
