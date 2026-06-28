@@ -58,10 +58,9 @@
   .sc .sub{font-family:var(--mono);font-size:11.5px;font-weight:500;color:var(--ink-2);white-space:nowrap}
   .ptsbox{display:flex;align-items:baseline;gap:7px}
   /* branded result header (shareable screencap) */
-  .result-brand{display:flex;align-items:center;justify-content:center;gap:12px;padding:2px 4px;margin:2px 0 12px}
-  .result-brand .rb-logo{height:36px;width:auto;flex:none}
-  .rb-title{font-family:var(--disp);font-weight:800;font-size:20px;letter-spacing:.004em;color:var(--brand);line-height:1.05}
-  .rb-title .rb-yr{color:var(--gray);font-weight:700}
+  /* blank scorecard rows (after Clear all times) — no rank/time/points yet */
+  .frow.blank .pos,.frow.blank .ftime,.frow.blank .fpts{color:#aeb6c4;font-weight:600}
+  .frow.blank .medal{opacity:.8;font-size:13px}
   /* race-day win chance row (below the finish board, outside the result screencap) */
   .winrow{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;margin:14px 0 8px}
   .winrow.hidden{display:none}
@@ -147,8 +146,9 @@
   .roster th.num,.roster td.num{text-align:right}
   .roster td{padding:3px 6px;border-top:1px solid var(--line-2)}
   .roster input.r-name{width:100%;border:1px solid transparent;background:transparent;padding:6px 8px;border-radius:8px;font-weight:600;font-size:14px;color:var(--ink)}
-  .roster input.r-pace{width:74px;border:1px solid var(--line);background:var(--surface-2);padding:6px 8px;border-radius:8px;font-family:var(--mono);font-weight:600;text-align:center;font-size:13px}
-  .roster input.r-name:focus,.roster input.r-pace:focus{outline:none;border-color:var(--our);background:#fff}
+  .roster input.r-pace,.roster input.r-5k{width:74px;border:1px solid var(--line);background:var(--surface-2);padding:6px 8px;border-radius:8px;font-family:var(--mono);font-weight:600;text-align:center;font-size:13px}
+  .roster input.r-5k{color:var(--ink-2)}
+  .roster input.r-name:focus,.roster input.r-pace:focus,.roster input.r-5k:focus{outline:none;border-color:var(--our);background:#fff}
   .opp .roster input:focus{border-color:var(--opp)}
   .roster .fivek{font-family:var(--mono);font-weight:600;color:var(--ink-2);font-size:13px}
   .roster tr.nsrow td{opacity:.5} .roster tr.nsrow .r-name{text-decoration:line-through}
@@ -164,6 +164,8 @@
   .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;border-radius:999px;font-weight:600;font-size:13px;border:1px solid var(--line);background:#fff;cursor:default}
   .pool .chip{cursor:pointer}
   .chip .pace{font-family:var(--mono);font-size:11px;color:var(--ink-2)}
+  .chip.chip-ns{border-style:dashed;opacity:.78;background:var(--opp-bg)}
+  .chip .ns-tag{font-family:var(--disp);font-size:9.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:#fff;background:var(--opp);padding:1px 6px;border-radius:999px}
   .chip input.leg-edit{width:46px;font-family:var(--mono);font-size:11px;color:var(--ink);font-weight:600;text-align:right;border:1px solid var(--line);border-radius:6px;padding:1px 4px;background:var(--surface-2)}
   .chip input.leg-edit:hover{background:#fff}
   .chip input.leg-edit:focus{outline:none;border-color:var(--our);background:#fff}
@@ -257,8 +259,9 @@
   @media (max-width:640px){
     .wrap{padding:0 12px calc(56px + env(safe-area-inset-bottom))}
     .banner-inner{padding:calc(16px + env(safe-area-inset-top)) 12px 14px}
+    .brand{justify-content:center;text-align:center}   /* centre the logo + title on phones */
     /* iOS zoom-on-focus fix: every text control >= 16px */
-    .roster input.r-name,.roster input.r-pace,.pteam input.tname,.toolbar select,
+    .roster input.r-name,.roster input.r-pace,.roster input.r-5k,.pteam input.tname,.toolbar select,
     .ptable .pp input,select.addsel,.tcard select,.leg1 select,select,input{font-size:16px}
     /* compact two-up scoreboard, each card stacked so wide scores can't overflow */
     .scorestrip{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"our opp";gap:8px}
@@ -287,7 +290,7 @@
     .panel-body{padding:11px}
     /* roster fits narrow + bigger taps */
     .roster th{padding:4px 4px 8px;font-size:10px} .roster td{padding:3px 4px}
-    .roster input.r-pace{width:66px} .roster input.r-name{padding:8px}
+    .roster input.r-pace,.roster input.r-5k{width:66px} .roster input.r-name{padding:8px}
     .x{padding:8px;font-size:18px}
     .chip{padding:6px 8px 6px 12px} .chip .cx{font-size:16px;padding:2px 5px}
     .addsel{padding:9px 10px} .dnfbox{font-size:13px;padding:4px 0}
@@ -305,7 +308,7 @@
   }
   @media (max-width:380px){
     .brand h1{font-size:20px} .brand .logo{height:40px;width:auto} .sc .pts{font-size:26px}
-    .roster input.r-pace{width:58px}
+    .roster input.r-pace,.roster input.r-5k{width:58px}
     .frow{grid-template-columns:2.5em 24px minmax(0,1fr) auto 2.6em;gap:6px;padding:9px 10px}
     .frow .medal{width:24px;height:24px;font-size:11px}
   }
@@ -333,36 +336,7 @@
   </header>
 
   <div class="wrap">
-    <!-- Try a scenario -->
-    <div class="toolbar">
-      <span class="tb-label"><label for="preset">Try a scenario</label><span class="help help-flush"><button type="button" class="help-btn" aria-label="About scenarios">?</button><span class="help-pop">Ready-made matchups — pick one to load both lineups. Lock a team (below) to keep it fixed and compare it against each opponent setup.</span></span></span>
-      <select id="preset"></select>
-      <button class="btn ghost" id="reset">Reset to defaults</button>
-    </div>
-
-    <!-- Team controls: lock + optimize, blue (left) vs red (right) — matches the scoreboard -->
-    <div class="teamctrl">
-      <div class="tc-col our">
-        <label class="lockchk our" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-our"><span class="lk-txt">🔒 Lock <span id="lock-our-name">Blue</span></span></label>
-        <button class="optbtn our" id="opt-our" data-act="optimize" data-side="our">Best Blue lineup</button>
-      </div>
-      <div class="tc-mid">
-        <span class="tc-title">⚡ Auto-optimize <span class="help"><button type="button" class="help-btn" aria-label="About optimise and lock">?</button><span class="help-pop right">Optimise loads a side's best lineup against the other's current one. Lock a team to pin its lineup — times stay editable, but runners can't be added or removed — so switching scenarios only changes the other team, letting you compare against each opponent combo.</span></span></span>
-        <div class="optbar-note" id="optnote"></div>
-      </div>
-      <div class="tc-col opp">
-        <label class="lockchk opp" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-opp"><span class="lk-txt">🔒 Lock <span id="lock-opp-name">Red</span></span></label>
-        <button class="optbtn opp" id="opt-opp" data-act="optimize" data-side="opp">Best Red lineup</button>
-      </div>
-    </div>
-
-    <!-- Final score -->
-    <!-- branded result header so a screenshot of the result captures the game name + logo -->
-    <div class="result-brand">
-      <img class="rb-logo" id="rb-logo" alt="" aria-hidden="true">
-      <span class="rb-title">FFF Don't Hide Legend Cup <span class="rb-yr">2026</span></span>
-    </div>
-
+    <!-- Result first (the page header above is the branding for a clean screencap) -->
     <div class="scorestrip">
       <div class="sc our"><div class="sc-info"><span class="lab" id="sc-our-name">TT &amp; SLK team</span><span class="sub" id="sc-our-time">—</span></div><div class="ptsbox"><span class="pts" id="sc-our">–</span></div></div>
       <div class="midv"><span class="vs">VS</span><span class="verdict none" id="verdict">set lineups</span></div>
@@ -378,20 +352,42 @@
       <span class="wr-sep">vs</span>
       <span class="wr opp" id="wr-opp">—</span>
     </div>
+
+    <!-- Controls (below the result so the result screencaps clean): scenario · lock · optimise -->
+    <div class="toolbar">
+      <span class="tb-label"><label for="preset">Try a scenario</label><span class="help help-flush"><button type="button" class="help-btn" aria-label="About scenarios">?</button><span class="help-pop">Ready-made matchups — pick one to load both lineups. Lock a team (below) to keep it fixed and compare it against each opponent setup.</span></span></span>
+      <select id="preset"></select>
+      <button class="btn ghost" id="clear-times" title="Set every runner's pace and 5K to 0:00 (keeps the team lineups) so you can type in the real race times">Clear all times</button>
+    </div>
+    <div class="teamctrl">
+      <div class="tc-col our">
+        <label class="lockchk our" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-our"><span class="lk-txt">🔒 Lock <span id="lock-our-name">Blue</span></span></label>
+        <button class="optbtn our" id="opt-our" data-act="optimize" data-side="our">Best Blue lineup</button>
+      </div>
+      <div class="tc-mid">
+        <span class="tc-title">⚡ Auto-optimize <span class="help"><button type="button" class="help-btn" aria-label="About optimise and lock">?</button><span class="help-pop right">Optimise loads a side's best lineup against the other's current one. Lock a team to pin its lineup — times stay editable, but runners can't be added or removed — so switching scenarios only changes the other team, letting you compare against each opponent combo.</span></span></span>
+        <div class="optbar-note" id="optnote"></div>
+      </div>
+      <div class="tc-col opp">
+        <label class="lockchk opp" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-opp"><span class="lk-txt">🔒 Lock <span id="lock-opp-name">Red</span></span></label>
+        <button class="optbtn opp" id="opt-opp" data-act="optimize" data-side="opp">Best Red lineup</button>
+      </div>
+    </div>
+
     <details class="adv">
       <summary>Scoring rules &amp; points table</summary>
       <div class="adv-body">
         <div class="ptable" id="ptable"></div>
         <div class="legend">
           <strong>Trio</strong> = leg-1 runner (full) + average of the two leg-2 runners → <code>t_leg1 + (a+b)/2</code>. Fastest-on-leg-1 is set by default.<br>
-          <strong>No-show (NS)</strong> — tick <b>NS</b> next to a runner in section&nbsp;1 to mark them absent. They leave the lineup and the team forfeits a runner. <b>Optimise</b> fields one capped no-show team (<code>−5</code>, <strong>max 6 pts</strong>) per NS, trying both and keeping the better:<br>
-          &nbsp;&nbsp;• <strong>Solo</strong> — one teammate runs the full 10 km = <code>2 × 5K</code>.<br>
-          &nbsp;&nbsp;• <strong>10K-trio</strong> — the leg-1 runner runs the 10 km; his latter 5K is averaged with a leg-2 runner's 5K: <code>5K + (latter-5K + partner-5K)/2</code>.<br>
+          <strong>No-show (NS)</strong> — tick <b>NS</b> next to a runner in section&nbsp;1 to mark them absent. They stay on their team as a marker and that team automatically becomes a capped no-show team (<code>−5</code>, <strong>max 6 pts</strong>); a present teammate runs the full 10 km. <b>Optimise</b> still finds the lowest-cost sacrifice (solo <code>2×5K</code>, or a 10K-trio that buries a slow teammate).<br>
+          <strong>Smart time entry</strong> — type digits and press Enter: <code>415</code>→4:15, <code>2115</code>→21:15, <code>4</code>→4:00. In section&nbsp;1 you can enter either the <em>pace</em> (5K fills in) or the <em>5K</em> (pace fills in).<br>
+          <strong>Clear all times</strong> — zeroes every pace/5K (keeping the lineups) so the board becomes a blank scorecard to fill in with the real race times.<br>
           <strong>DNF</strong> (toggle on a team) is placed last for 0 pts and takes an extra <code>−5</code>.<br>
           <strong>Actual times</strong> — both the <em>team total</em> (on each card) and each runner's <em>leg time</em> (next to their name) are editable. Editing the team total splits it proportionally across the runners; editing one runner's leg holds the team total and rebalances the partner — and the runner's pace updates to match.<br>
           <strong>Lock</strong> (toggle on a team) — pins that exact team: the optimiser won't touch it and its runners can't be added or removed (you can still edit times). E.g. put your chosen 10 km runner alone on a team and lock it, then optimise the rest.<br>
           <strong>🔒 Lock Blue / Lock Red</strong> (the big team lock) — pins that whole team: it ticks every one of that team's small-team locks, disables its optimise button, and keeps it fixed when you switch scenarios so only the <em>other</em> team changes. Lock your side, then cycle the opponent combos to compare scores.<br>
-          <strong>Win %</strong> (next to each score) — a race-day Monte-Carlo win chance <em>vs the opponent lineup currently on the board</em>, over many races with each leg jittered ±10 s/km.<br>
+          <strong>Win %</strong> (row below the board) — a race-day Monte-Carlo win chance <em>vs the opponent lineup currently on the board</em>, over many races with each leg jittered ±10 s/km.<br>
           <strong>Tie on points</strong> → the team with the faster combined time wins.
         </div>
       </div>
@@ -421,30 +417,60 @@
 function paceToSec(str){const m=String(str).trim().match(/^(\d+):(\d{1,2}(?:\.\d+)?)$/);if(!m)return null;return parseInt(m[1])*60+parseFloat(m[2]);}
 function secToPace(s){if(s==null)return '';const m=Math.floor(s/60);const sec=s%60;return m+':'+(Number.isInteger(sec)?String(sec).padStart(2,'0'):sec.toFixed(1).padStart(4,'0'));}
 function fiveK(p){return p*5;}
+// smart time entry: "415"->4:15, "2115"->21:15, "4"->4:00, "4:5"->4:05; pass through anything odd
+function parseTimeInput(raw){
+  let s=String(raw).trim();
+  if(s==='') return '';
+  if(s.includes(':')){const sec=paceToSec(s);return sec!=null?secToPace(Math.round(sec)):s;}
+  if(!/^\d+$/.test(s)) return s;
+  let mins,secs;
+  if(s.length<=2){mins=parseInt(s,10);secs=0;}
+  else{secs=parseInt(s.slice(-2),10);mins=parseInt(s.slice(0,-2),10);}
+  return mins+':'+String(secs).padStart(2,'0');
+}
+function eff5k(side,id){const r=runnerById(side,id);if(!r)return 1e9;return r.actSec!=null?r.actSec:fiveK(paceToSec(r.pace)??99999);}
+// any team holding a no-show runner becomes a no-show team; its fastest present runner does the 10K
+function markNoShowTeams(side){
+  state[side].teams.forEach(t=>{
+    const present=t.memberIds.filter(id=>{const r=runnerById(side,id);return r&&!r.ns;});
+    const hasNS=t.memberIds.some(id=>{const r=runnerById(side,id);return r&&r.ns;});
+    if(hasNS){t.noshow=true;if(present.length)t.leg1Id=present.slice().sort((a,b)=>eff5k(side,a)-eff5k(side,b))[0];}
+  });
+}
+// keep a freshly-marked no-show runner visible on a no-show team (pairing in a present teammate to run the 10K)
+function ensureNoShowTeam(side,id){
+  let team=state[side].teams.find(t=>t.memberIds.includes(id));
+  if(!team){
+    const partner=unassigned(side).slice().sort((a,b)=>eff5k(side,b.id)-eff5k(side,a.id))[0];  // slowest free present runner
+    team={id:++uid,memberIds:partner?[partner.id,id]:[id],leg1Id:null,dnf:false,noshow:true,lock:false};
+    state[side].teams.push(team);
+  }else team.noshow=true;
+  const present=team.memberIds.filter(mid=>{const r=runnerById(side,mid);return r&&!r.ns;});
+  if(present.length)team.leg1Id=present.slice().sort((a,b)=>eff5k(side,a)-eff5k(side,b))[0];
+}
 // 10K seconds for a runner: explicit override (min:sec) if valid, else the no-fatigue 2×5K default.
 function fmtTime(s){if(!isFinite(s))return 'DNF';s=Math.round(s);const m=Math.floor(s/60);const sec=s%60;return m+':'+String(sec).padStart(2,'0');}
 function fmtTotal(s){if(!isFinite(s)||s===0)return '—';s=Math.round(s);const h=Math.floor(s/3600);const m=Math.floor((s%3600)/60);const sec=s%60;return (h>0?h+':':'')+(h>0?String(m).padStart(2,'0'):m)+':'+String(sec).padStart(2,'0');}
 
+// A team is a NO-SHOW team if it carries the noshow flag OR contains a no-show (ns) member.
+// No-show teams are scored from their PRESENT runners only — ns members are markers that don't
+// run (they keep the absent runner visible in the lineup): one present runner runs the full 10 km
+// (1 present → solo = 2×5K; ≥2 present → leg-1 runs 10K + the others buried at half credit).
 function teamTime(members, leg1Id, dnf, noshow){
   if(dnf) return {t:Infinity,type:'dnf'};
   const m=members;
   if(m.length===0) return {t:null,type:'empty'};
-  if(m.length===1) return {t:(m[0].k!=null?m[0].k:2*fiveK(m[0].p)),type:'solo'};  // lone runner = 10K (override or 2×5K)
-  if(m.length===2){
-    if(noshow){
-      // no-show team: one runner does the full 10K *inside a trio*; the partner runs leg 2 only
-      // (half credit). 10K runner = leg1 (defaults to the faster of the two). His first 5K = his
-      // fresh 5K, his second 5K = (10K − 5K), so a per-runner 10K override (with fatigue) flows
-      // through; with no override 10K = 2×5K and this reduces to 1.5·5K_r + 0.5·5K_partner.
-      let r=m.find(x=>x.id===leg1Id); if(!r) r=m.slice().sort((a,b)=>a.p-b.p)[0];
-      const other=m.find(x=>x!==r);
-      const rk=(r.k!=null?r.k:2*fiveK(r.p)), leg1=fiveK(r.p), leg2=rk-leg1;
-      return {t:leg1+(leg2+fiveK(other.p))/2,type:'trio10k'};
-    }
-    return {t:fiveK(m[0].p)+fiveK(m[1].p),type:'pair'};
+  const present=m.filter(x=>!x.ns);
+  if(noshow || present.length<m.length){
+    const pool=present.length?present:m;                                   // who actually runs
+    let r=pool.find(x=>x.id===leg1Id)||pool.slice().sort((a,b)=>a.p-b.p)[0]; // 10K runner = chosen / fastest present
+    const buried=pool.filter(x=>x!==r);
+    if(buried.length===0) return {t:2*fiveK(r.p),type:'solo'};             // present runner runs 10K solo
+    return {t:1.5*fiveK(r.p)+0.5*buried.reduce((s,x)=>s+fiveK(x.p),0),type:'trio10k'};
   }
-  let leg1=m.find(x=>x.id===leg1Id);
-  if(!leg1) leg1=m.slice().sort((a,b)=>a.p-b.p)[0];
+  if(m.length===1) return {t:2*fiveK(m[0].p),type:'solo'};
+  if(m.length===2) return {t:fiveK(m[0].p)+fiveK(m[1].p),type:'pair'};
+  let leg1=m.find(x=>x.id===leg1Id)||m.slice().sort((a,b)=>a.p-b.p)[0];
   const others=m.filter(x=>x!==leg1);
   return {t:fiveK(leg1.p)+others.reduce((s,x)=>s+fiveK(x.p),0)/2,type:'trio'};
 }
@@ -481,7 +507,7 @@ function legCoeffs(members,leg1Id,noshow){
 }
 function teamOf(side,id){return state[side].teams.find(t=>t.memberIds.includes(id));}
 function editTeamTotal(side,teamId,str){
-  const T=paceToSec(str); const team=findTeam(side,teamId); if(!team)return;
+  const T=paceToSec(parseTimeInput(str)); const team=findTeam(side,teamId); if(!team)return;
   const members=team.memberIds.map(id=>resolve(side,id)).filter(Boolean);
   if(T==null||T<=0||!members.length)return;
   const old=teamTime(members,team.leg1Id,team.dnf,team.noshow).t;
@@ -491,7 +517,7 @@ function editTeamTotal(side,teamId,str){
   renderRoster(side);renderLineup(side);renderResults();
 }
 function editMemberLeg(side,id,str){
-  const a=paceToSec(str); if(a==null||a<=0)return;
+  const a=paceToSec(parseTimeInput(str)); if(a==null||a<=0)return;
   const team=teamOf(side,id); if(!team)return;
   const members=team.memberIds.map(mid=>resolve(side,mid)).filter(Boolean);  // snapshot of old 5Ks
   const T=teamTime(members,team.leg1Id,team.dnf,team.noshow).t;        // hold this total
@@ -544,8 +570,9 @@ function teamLegs(side, st){
   if(st.dnf) return {legs:null,dnf:true,capped:false};
   const tt=teamTime(m,st.leg1Id,st.dnf,st.noshow);
   if(tt.type==='empty') return null;
-  if(tt.type==='solo'){const k=(m[0].k!=null?m[0].k:2*fiveK(m[0].p));return {legs:[[k/2,1],[k/2,1]],capped:true};}
-  if(tt.type==='trio10k'){let r=m.find(x=>x.id===st.leg1Id)||m.slice().sort((a,b)=>a.p-b.p)[0];const o=m.find(x=>x!==r);const rk=(r.k!=null?r.k:2*fiveK(r.p)),f=fiveK(r.p);return {legs:[[f,1],[rk-f,.5],[fiveK(o.p),.5]],capped:true};}
+  const present=m.filter(x=>!x.ns), pool=present.length?present:m;
+  if(tt.type==='solo'){let r=pool.find(x=>x.id===st.leg1Id)||pool.slice().sort((a,b)=>a.p-b.p)[0];const f=fiveK(r.p);return {legs:[[f,1],[f,1]],capped:true};}
+  if(tt.type==='trio10k'){let r=pool.find(x=>x.id===st.leg1Id)||pool.slice().sort((a,b)=>a.p-b.p)[0];const f=fiveK(r.p);return {legs:[[f,1],[f,.5]].concat(pool.filter(x=>x!==r).map(o=>[fiveK(o.p),.5])),capped:true};}
   if(tt.type==='pair') return {legs:[[fiveK(m[0].p),1],[fiveK(m[1].p),1]],capped:false};
   let leg1=m.find(x=>x.id===st.leg1Id)||m.slice().sort((a,b)=>a.p-b.p)[0];
   return {legs:[[fiveK(leg1.p),1]].concat(m.filter(x=>x!==leg1).map(o=>[fiveK(o.p),.5])),capped:false};
@@ -589,7 +616,7 @@ function freshState(){
 }
 // effective 5K = an actual-time override (r.actSec, exact seconds) when present, else pace×5.
 // We expose it through `p` (effective pace = 5K/5) so every fiveK(p) call stays exact.
-function resolve(side,id){const r=state[side].runners.find(x=>x.id===id);if(!r)return null;const p=r.actSec!=null?r.actSec/5:(paceToSec(r.pace)??99999);return {id:r.id,name:r.name,p};}
+function resolve(side,id){const r=state[side].runners.find(x=>x.id===id);if(!r)return null;const p=r.actSec!=null?r.actSec/5:(paceToSec(r.pace)??99999);return {id:r.id,name:r.name,p,ns:!!r.ns};}
 function runnerById(side,id){return state[side].runners.find(x=>x.id===id);}
 function assignedIds(side){const s=new Set();state[side].teams.forEach(t=>t.memberIds.forEach(id=>s.add(id)));return s;}
 function unassigned(side){const a=assignedIds(side);return state[side].runners.filter(r=>!a.has(r.id)&&!r.ns);}  // no-show runners are out of the pool
@@ -606,7 +633,7 @@ function lineupFromNames(side,groups){
 
 const LINEUPS={
   // ★ the announced final lineups (the actual matchup)
-  blueAnnounced:[['Ryan','LC'],['LP','FL'],['LW','TT'],['KK','DB'],['5K','Penny','CHT'],['SLK']],
+  blueAnnounced:[['Ryan','LC'],['LP','FL'],['LW','TT'],['KK','DB'],['5K','Penny','CHT'],['SLK','FF']],
   redAnnounced:[['WL','SIN'],['Cai','Sandro'],['CM','KTY'],['CP','HT'],['9J','LS'],['Oyster','GoG','AK']],
   // Red archetypes (5 pairs + 1 trio)
   oppOptimal:[['SIN','CM'],['Sandro','Oyster'],['WL','LS'],['KTY','9J'],['Cai','CP'],['HT','GoG','AK']],
@@ -614,10 +641,10 @@ const LINEUPS={
   oppSpreadAces:[['Sandro','HT'],['WL','KTY'],['SIN','CM'],['Cai','CP'],['Oyster','LS'],['9J','GoG','AK']],
   oppStacked:[['Sandro','WL'],['SIN','CM'],['HT','KTY'],['Cai','CP'],['Oyster','LS'],['9J','GoG','AK']],
   // Blue best responses to each (FF is the no-show; a 1-runner group is the capped 10K solo)
-  blueVsOptimal:[['LW'],['KK','DB','SLK'],['TT','LP'],['LC','FL'],['Ryan','5K'],['Penny','CHT']],
-  blueVsBalanced:[['LW'],['TT','KK','SLK'],['LC','Penny'],['FL','CHT'],['LP','5K'],['Ryan','DB']],
-  blueVsAces:[['LW'],['TT','KK','CHT'],['LC','FL'],['LP','5K'],['Ryan','DB'],['SLK','Penny']],
-  blueVsStacked:[['LP'],['KK','DB','CHT'],['TT','Ryan'],['LC','LW'],['FL','5K'],['SLK','Penny']]
+  blueVsOptimal:[['LW','FF'],['KK','DB','SLK'],['TT','LP'],['LC','FL'],['Ryan','5K'],['Penny','CHT']],
+  blueVsBalanced:[['LW','FF'],['TT','KK','SLK'],['LC','Penny'],['FL','CHT'],['LP','5K'],['Ryan','DB']],
+  blueVsAces:[['LW','FF'],['TT','KK','CHT'],['LC','FL'],['LP','5K'],['Ryan','DB'],['SLK','Penny']],
+  blueVsStacked:[['LP','FF'],['KK','DB','CHT'],['TT','Ryan'],['LC','LW'],['FL','5K'],['SLK','Penny']]
 };
 // FF is the no-show in every scenario; each loads Red's setup + Blue's best response.
 const PRESETS=[
@@ -638,6 +665,7 @@ function applyPreset(p){
   (p.noshow||[]).forEach(n=>{const r=state.our.runners.find(x=>x.name===n);if(r)r.ns=true;});
   state.our.teams=lineupFromNames('our',LINEUPS[p.our]);
   state.opp.teams=lineupFromNames('opp',LINEUPS[p.opp]);
+  markNoShowTeams('our');markNoShowTeams('opp');   // flag teams that carry a no-show runner
   ['our','opp'].forEach(s=>{if(keep[s])state[s]=keep[s];});
   renderAll();
 }
@@ -655,8 +683,8 @@ function renderRoster(side){
     <tr data-id="${r.id}" class="${r.ns?'nsrow':''}">
       <td><input class="r-name" value="${escapeAttr(r.name)}" data-side="${side}" data-id="${r.id}" aria-label="runner name"></td>
       <td class="num"><input class="r-pace" value="${escapeAttr(r.pace)}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="pace per km"></td>
-      <td class="num"><span class="fivek" id="fivek-${r.id}">${r.actSec!=null?fmtTime(r.actSec):fmtTime(fiveK(paceToSec(r.pace)??0))}</span></td>
-      <td class="num"><label class="nsbox" title="no-show: this runner is absent. The team forfeits a runner → one capped 10K solo (−5). Optimise to apply."><input type="checkbox" class="r-ns" data-side="${side}" data-id="${r.id}" ${r.ns?'checked':''}></label></td>
+      <td class="num"><input class="r-5k" id="fivek-${r.id}" value="${r.actSec!=null?fmtTime(r.actSec):fmtTime(fiveK(paceToSec(r.pace)??0))}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="5K time"></td>
+      <td class="num"><label class="nsbox" title="no-show: marks this runner absent. They stay on their team as a marker and that team auto-becomes a capped 10 km no-show team (−5, max 6 pts); a present teammate runs the 10 km."><input type="checkbox" class="r-ns" data-side="${side}" data-id="${r.id}" ${r.ns?'checked':''}></label></td>
       <td class="num"><button class="x" data-act="del-runner" data-side="${side}" data-id="${r.id}" title="remove">×</button></td>
     </tr>`).join('');
   el('roster-'+side).innerHTML=`
@@ -674,14 +702,16 @@ function renderRoster(side){
 }
 
 function chip(side,r,inPool,locked){
-  // bench chips show a static 5K; lineup chips make the leg time editable (drives the runner's pace)
-  const time=inPool
-    ? `<span class="pace">${fmtTime(fiveK(r.p))}</span>`
-    : `<input class="pace leg-edit" data-act="edit-leg" data-side="${side}" data-id="${r.id}" value="${fmtTime(fiveK(r.p))}" inputmode="numeric" aria-label="${escapeAttr(r.name)} leg time" title="actual 5 km leg time — sets this runner's pace and rebalances the partner to keep the team total">`;
-  // a locked team keeps its runners — no remove button
-  return `<span class="chip${locked?' chip-locked':''}" ${inPool?`data-act="pool-add" data-side="${side}" data-id="${r.id}"`:''}>
+  // bench chips show a static 5K; lineup chips make the leg time editable (drives the runner's pace);
+  // a no-show member is a non-running marker (they keep the absent runner visible on the team)
+  let time;
+  if(inPool) time=`<span class="pace">${fmtTime(fiveK(r.p))}</span>`;
+  else if(r.ns) time=`<span class="pace ns-tag">no-show</span>`;
+  else time=`<input class="pace leg-edit" data-act="edit-leg" data-side="${side}" data-id="${r.id}" value="${fmtTime(fiveK(r.p))}" inputmode="numeric" aria-label="${escapeAttr(r.name)} leg time" title="actual 5 km leg time — sets this runner's pace and rebalances the partner to keep the team total">`;
+  // locked teams and no-show markers keep their runners — no remove button
+  return `<span class="chip${locked?' chip-locked':''}${r.ns?' chip-ns':''}" ${inPool?`data-act="pool-add" data-side="${side}" data-id="${r.id}"`:''}>
     <span>${escapeHtml(r.name)}</span>${time}
-    ${(inPool||locked)?'':`<button class="cx" data-act="member-remove" data-side="${side}" data-id="${r.id}" title="remove">×</button>`}
+    ${(inPool||locked||r.ns)?'':`<button class="cx" data-act="member-remove" data-side="${side}" data-id="${r.id}" title="remove">×</button>`}
   </span>`;
 }
 
@@ -696,18 +726,26 @@ function renderLineup(side){
     const memChips=legSorted(members).map(m=>chip(side,m,false,t.lock)).join('');
     const addOpts=un.map(r=>`<option value="${r.id}">${escapeHtml(r.name)} (${fmtTime(fiveK(paceToSec(r.pace)??0))})</option>`).join('');
     const addSel=(un.length&&!t.lock)?`<select class="addsel" data-act="member-add" data-side="${side}" data-team="${t.id}" aria-label="add runner to team"><option value="">+ add runner…</option>${addOpts}</select>`:'';   // locked teams don't accept new runners
+    const present=members.filter(m=>!m.ns);
+    const isNS=t.noshow||present.length<members.length;
     let leg1Ctrl='';
-    if((members.length>=3 || (members.length===2 && t.noshow)) && !t.dnf){
-      const lbl=members.length===2?'10K':'leg 1';
-      const opts=members.map(m=>`<option value="${m.id}" ${m.id===(t.leg1Id||members.slice().sort((a,b)=>a.p-b.p)[0].id)?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
-      leg1Ctrl=`<span class="leg1">${lbl} <select data-act="set-leg1" data-side="${side}" data-team="${t.id}">${opts}</select></span>`;
+    if(!t.dnf){
+      if(isNS && present.length>=2){   // choose who runs the 10K (present runners only)
+        const cur=(t.leg1Id&&present.some(m=>m.id===t.leg1Id))?t.leg1Id:present.slice().sort((a,b)=>a.p-b.p)[0].id;
+        const opts=present.map(m=>`<option value="${m.id}" ${m.id===cur?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
+        leg1Ctrl=`<span class="leg1">10K <select data-act="set-leg1" data-side="${side}" data-team="${t.id}">${opts}</select></span>`;
+      } else if(!isNS && members.length>=3){
+        const cur=t.leg1Id||members.slice().sort((a,b)=>a.p-b.p)[0].id;
+        const opts=members.map(m=>`<option value="${m.id}" ${m.id===cur?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
+        leg1Ctrl=`<span class="leg1">leg 1 <select data-act="set-leg1" data-side="${side}" data-team="${t.id}">${opts}</select></span>`;
+      }
     }
     let badge='',note='';
     const ty=t.dnf?'dnf':tt.type;
     if(ty==='pair')badge='';
     else if(ty==='trio')badge='<span class="badge trio">trio</span>';
-    else if(ty==='solo'){badge='<span class="badge solo">solo</span>';note='<div class="note warn">no-show: solo 10 km = 2×5K — capped at 6 pts, −5 penalty</div>';}
-    else if(ty==='trio10k'){badge='<span class="badge solo">10K trio</span>';note='<div class="note warn">no-show: 10K runner + buried partner (leg 2) — capped at 6 pts, −5 penalty</div>';}
+    else if(ty==='solo'){badge='<span class="badge solo">no-show</span>';note='<div class="note warn">no-show: a present runner runs the full 10 km — capped at 6 pts, −5 penalty</div>';}
+    else if(ty==='trio10k'){badge='<span class="badge solo">no-show</span>';note='<div class="note warn">no-show: leg-1 runner does the 10 km, partner buried (leg 2) — capped at 6 pts, −5 penalty</div>';}
     else if(ty==='dnf')badge='<span class="badge dnf">DNF</span>';
     else if(ty==='empty')note='<div class="note">add 2 runners (or 3 for a trio)</div>';
     return `
@@ -736,7 +774,7 @@ function renderLineup(side){
 
   const totalTeams=T.teams.length;
   const nsRunners=T.runners.filter(r=>r.ns);
-  const nsBanner=nsRunners.length?`<div class="ns-banner">⚠︎ no-show: <b>${nsRunners.map(r=>escapeHtml(r.name)).join(', ')}</b> — field ${nsRunners.length} capped 10 km no-show team${nsRunners.length>1?'s':''} (−5 each). Press <b>Best ${side==='our'?'Blue':'Red'} lineup</b> — it picks solo vs 10K-trio for you.</div>`:'';
+  const nsBanner=nsRunners.length?`<div class="ns-banner">⚠︎ no-show: <b>${nsRunners.map(r=>escapeHtml(r.name)).join(', ')}</b> — kept on a capped 10 km no-show team (−5, max 6 pts each); a present teammate runs the 10 km. <b>Best ${side==='our'?'Blue':'Red'} lineup</b> finds the lowest-cost sacrifice.</div>`:'';
   el('lineup-'+side).innerHTML=`
     <div class="panel-top">
       <div class="pteam"><span class="dot"></span><span class="tcard-name" style="font-size:15px;color:var(--ink)">${escapeHtml(T.name)}</span></div>
@@ -758,27 +796,46 @@ function renderPoints(){
     <div class="pp"><span>${i+1}${ord(i+1)}</span><input type="number" value="${v}" data-act="point" data-idx="${i}"></div>`).join('');
 }
 
+function scorecardRows(side){   // blank template: teams in lineup order, no rank/time/points
+  return state[side].teams.map(t=>{
+    const members=legSorted(t.memberIds.map(id=>resolve(side,id)).filter(Boolean));
+    if(!members.length) return '';
+    const names=members.map(m=>m.name).join(' + ');
+    const tt=teamTime(members,t.leg1Id,t.dnf,t.noshow);
+    const ty=t.dnf?'DNF':(tt.type==='trio'?'trio':((tt.type==='solo'||tt.type==='trio10k')?'no-show':''));
+    return `<div class="frow ${side} blank">
+      <div class="pos">—</div>
+      <div class="medal" style="background:${side==='our'?'var(--our)':'var(--opp)'}">·</div>
+      <div class="who"><span class="sideflag ${side}"></span><span class="names" title="${escapeAttr(names)}">${escapeHtml(names)}</span><span class="tg ${side}">${side==='our'?'BLUE':'RED'}</span></div>
+      <div class="ftime">—</div>
+      <div class="fbadge">${ty}</div>
+      <div class="fpts">—</div>
+    </div>`;
+  }).join('');
+}
 function renderResults(){
   const res=computeResults(state);
-  // banner
-  el('sc-our').textContent=trim(res.ourPts); el('sc-opp').textContent=trim(res.oppPts);
+  const blank = res.rows.length>0 && isBlankRecord();   // all times 0:00 → show a fill-in scorecard
+  // scoreboard
   el('sc-our-name').textContent=state.our.name; el('sc-opp-name').textContent=state.opp.name;
-  el('sc-our-time').textContent = res.ourTime>0 ? 'combined '+fmtTotal(res.ourTime) : '—';
-  el('sc-opp-time').textContent = res.oppTime>0 ? 'combined '+fmtTotal(res.oppTime) : '—';
+  el('sc-our').textContent = blank?'–':trim(res.ourPts); el('sc-opp').textContent = blank?'–':trim(res.oppPts);
+  el('sc-our-time').textContent = (!blank&&res.ourTime>0) ? 'combined '+fmtTotal(res.ourTime) : '—';
+  el('sc-opp-time').textContent = (!blank&&res.oppTime>0) ? 'combined '+fmtTotal(res.oppTime) : '—';
   const v=el('verdict');
-  if(res.rows.length===0){v.className='verdict none';v.textContent='set lineups';}
+  if(blank){v.className='verdict none';v.textContent='enter times';}
+  else if(res.rows.length===0){v.className='verdict none';v.textContent='set lineups';}
   else if(res.winner==='tie'){v.className='verdict tie';v.textContent='Dead tie';}
   else{v.className='verdict '+res.winner;v.textContent=(res.winner==='our'?state.our.name:state.opp.name)+' win';}
   // sticky bar — team name next to its score (verdict dropped; the scores make it obvious)
   const sbo=el('sb-our'),sbp=el('sb-opp'),sbon=el('sb-our-name'),sbpn=el('sb-opp-name');
-  if(sbo)sbo.textContent=trim(res.ourPts);
-  if(sbp)sbp.textContent=trim(res.oppPts);
+  if(sbo)sbo.textContent=blank?'–':trim(res.ourPts);
+  if(sbp)sbp.textContent=blank?'–':trim(res.oppPts);
   if(sbon)sbon.textContent=stickyName(state.our.name);
   if(sbpn)sbpn.textContent=stickyName(state.opp.name);
 
   // race-day win % (deferred so typing/dragging stays snappy) — shown in its own row under the scores
   const tok=++winTok, swin=el('wr-our'), spwin=el('wr-opp'), wrow=el('winrow');
-  const playable=res.rows.some(r=>r.side==='our')&&res.rows.some(r=>r.side==='opp');
+  const playable=!blank&&res.rows.some(r=>r.side==='our')&&res.rows.some(r=>r.side==='opp');
   if(wrow)wrow.classList.toggle('hidden',!playable);
   if(playable){
     if(swin)swin.textContent='…'; if(spwin)spwin.textContent='…';
@@ -787,6 +844,16 @@ function renderResults(){
       const wp=winProbBoard(2000);
       if(wp){ if(swin)swin.textContent=Math.round(wp.our*100)+'%'; if(spwin)spwin.textContent=Math.round(wp.opp*100)+'%'; }
     },0);
+  }
+
+  if(blank){
+    el('results').innerHTML=`
+      <div class="board">
+        <div class="checker"></div>
+        <div class="board-head"><h3>Finish board</h3><span class="cap">scorecard — enter times to rank</span></div>
+        ${scorecardRows('our')}${scorecardRows('opp')}
+      </div>`;
+    return;
   }
 
   const rowsHtml=res.rows.map(r=>{
@@ -913,6 +980,11 @@ function optimize(side){
         return {id:++uid,memberIds:g.ids,leg1Id:leg1,dnf:false,noshow,lock:false};
       });
       state[side].teams=lockedTeams.concat(freeTeams);             // keep locked teams, append the optimised ones
+      // keep the no-show runners visible: attach each to a capped team as a marker (doesn't change its time)
+      const assigned=new Set();state[side].teams.forEach(t=>t.memberIds.forEach(id=>assigned.add(id)));
+      const freeNS=state[side].runners.filter(r=>r.ns&&!assigned.has(r.id)).map(r=>r.id);
+      const openCap=freeTeams.filter(t=>{const mm=t.memberIds.map(id=>resolve(side,id)).filter(Boolean);const tt=teamTime(mm,t.leg1Id,t.dnf,t.noshow);return (tt.type==='solo'||tt.type==='trio10k')&&!t.memberIds.some(id=>{const o=runnerById(side,id);return o&&o.ns;});});
+      freeNS.forEach((id,i)=>{if(openCap[i])openCap[i].memberIds.push(id);});
       renderLineup(side);renderResults();
       const bits=[]; if(lockedTeams.length)bits.push(lockedTeams.length+' locked'); if(nNS)bits.push(nNS+' no-show');
       el('optnote').textContent=`Loaded the best ${side==='our'?'Blue':'Red'} lineup${bits.length?' ('+bits.join(', ')+')':''} → ${trim(best)} pts.`;
@@ -934,7 +1006,7 @@ document.addEventListener('input',e=>{
   }
   if(t.classList.contains('r-pace')){
     const r=runnerById(t.dataset.side,+t.dataset.id);
-    if(r){r.pace=t.value;r.actSec=null;const sec=paceToSec(t.value);el('fivek-'+r.id).textContent=sec==null?'—':fmtTime(fiveK(sec));}  // typing a pace clears any actual-time override
+    if(r){r.pace=t.value;r.actSec=null;const sec=paceToSec(t.value);const fk=el('fivek-'+r.id);if(fk)fk.value=sec==null?'':fmtTime(fiveK(sec));}  // typing a pace clears any actual-time override
     renderLineup('our');renderLineup('opp');renderResults();return;
   }
   if(t.classList.contains('tname')){state[t.dataset.side].name=t.value;renderLineup(t.dataset.side);renderResults();return;}
@@ -943,6 +1015,8 @@ document.addEventListener('input',e=>{
 
 document.addEventListener('change',e=>{
   const t=e.target, side=t.dataset.side;
+  if(t.classList.contains('r-pace')){const r=runnerById(side,+t.dataset.id);if(r){r.pace=parseTimeInput(t.value)||r.pace;r.actSec=null;}renderRoster(side);renderLineup(side);renderResults();return;}   // pace → derives 5K
+  if(t.classList.contains('r-5k')){const r=runnerById(side,+t.dataset.id);if(r){const sec=paceToSec(parseTimeInput(t.value));if(sec!=null&&sec>0){r.actSec=sec;r.pace=secToPace(Math.round(sec/5));}else{r.actSec=null;}}renderRoster(side);renderLineup(side);renderResults();return;}   // 5K → derives pace
   if(t.dataset.act==='member-add'){const id=+t.value;if(id){addMember(side,+t.dataset.team,id);}return;}
   if(t.dataset.act==='set-leg1'){const team=findTeam(side,+t.dataset.team);if(team){team.leg1Id=+t.value;renderLineup(side);renderResults();}return;}
   if(t.dataset.act==='toggle-dnf'){const team=findTeam(side,+t.dataset.team);if(team){team.dnf=t.checked;renderLineup(side);renderResults();}return;}
@@ -952,7 +1026,8 @@ document.addEventListener('change',e=>{
   if(t.classList.contains('r-ns')){const r=runnerById(side,+t.dataset.id);if(r){
     if(t.checked && state[side].teams.some(tm=>tm.lock&&tm.memberIds.includes(r.id))){t.checked=false;el('optnote').textContent='Unlock that runner’s team before marking a no-show.';return;}  // a locked team keeps its runners
     r.ns=t.checked;
-    if(r.ns){state[side].teams.forEach(tm=>{tm.memberIds=tm.memberIds.filter(x=>x!==r.id);if(tm.leg1Id===r.id)tm.leg1Id=null;});}  // a no-show runner leaves the lineup
+    if(r.ns){ensureNoShowTeam(side,r.id);}                     // keep them in the lineup on a no-show team (penalty auto-applies)
+    else{state[side].teams.forEach(tm=>{if(tm.memberIds.includes(r.id)&&!tm.memberIds.some(x=>{const o=runnerById(side,x);return o&&o.ns;}))tm.noshow=false;});}  // un-flag a team that no longer has any no-show
     renderRoster(side);renderLineup(side);renderResults();}return;}
 });
 
@@ -995,11 +1070,18 @@ function delRunner(side,id){
   state[side].teams.forEach(t=>{t.memberIds=t.memberIds.filter(x=>x!==id);if(t.leg1Id===id)t.leg1Id=null;});
   renderRoster(side);renderLineup(side);renderResults();
 }
+// zero every runner's pace & 5K (keeps the team lineups) so the board becomes a blank scorecard to fill in
+function clearAllTimes(){
+  ['our','opp'].forEach(side=>state[side].runners.forEach(r=>{r.pace='0:00';r.actSec=null;}));
+  el('optnote').textContent='';
+  renderAll();
+}
+function isBlankRecord(){return ['our','opp'].every(side=>state[side].runners.every(r=>!(eff5k(side,r.id)>0)));}
 
 /* =================== INIT =================== */
 el('preset').innerHTML=PRESETS.map((p,i)=>`<option value="${i}">${p.label}</option>`).join('');
 el('preset').addEventListener('change',e=>applyPreset(PRESETS[+e.target.value]));
-el('reset').addEventListener('click',()=>{el('lock-our').checked=false;el('lock-opp').checked=false;el('preset').value='0';applyPreset(PRESETS[0]);});
+el('clear-times').addEventListener('click',clearAllTimes);   // zero every pace/5K (keeps the lineups) for entering live results
 // master team-lock: ticks/unticks every small-team lock on that side, disables its optimise, and pins it across scenarios.
 // Individual small-team locks set before the master goes on are remembered (t._ulock) and restored when it goes off.
 ['lock-our','lock-opp'].forEach(id=>el(id).addEventListener('change',e=>{
@@ -1009,7 +1091,7 @@ el('reset').addEventListener('click',()=>{el('lock-our').checked=false;el('lock-
   syncLockUI();renderLineup(side);renderResults();
 }));
 // reuse the header logo bitmap in the sticky bar (no second copy of the data URI)
-(function(){const src=document.querySelector('.brand .logo');if(!src)return;['sb-logo','rb-logo'].forEach(id=>{const d=el(id);if(d)d.src=src.src;});})();
+(function(){const src=document.querySelector('.brand .logo');if(!src)return;const d=el('sb-logo');if(d)d.src=src.src;})();
 // "?" help popovers: tap to toggle, tap elsewhere to close
 document.addEventListener('click',e=>{
   const btn=e.target.closest('.help-btn');
