@@ -63,33 +63,39 @@
   .verdict.our{background:var(--our);color:#fff} .verdict.opp{background:var(--opp);color:#fff} .verdict.tie{background:#43506b;color:#fff} .verdict.none{color:var(--ink-2);background:var(--surface-2)}
 
   /* ---------- team controls: lock + optimize, blue left / red right ---------- */
-  /* one compact controls card wrapping the scenario row + the lock/optimise grid */
-  .controls{background:linear-gradient(180deg,#fff,var(--brand-bg));border:1px solid #E3D5F1;border-radius:14px;box-shadow:var(--shadow);padding:12px 14px;margin:12px 0}
-  .controls .toolbar{margin:0 0 10px}
-  .controls hr,.controls .toolbar+.teamctrl{border-top:1px solid #E9DEF5;padding-top:11px}
-  .teamctrl{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 18px;align-items:stretch}
-  .tc-col{display:flex;flex-direction:column;gap:9px;min-width:0}
-  .tc-col.our .lockchk{align-self:flex-start}
-  .tc-col.opp{align-items:flex-end}
-  .tc-col.opp .lockchk{align-self:flex-end}
-  .tc-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;min-width:108px}
+  /* one compact controls card: Auto-optimize (title · one row of lock+buttons) over the scenario row */
+  .controls{background:linear-gradient(180deg,#fff,var(--brand-bg));border:1px solid #E3D5F1;border-radius:14px;box-shadow:var(--shadow);padding:11px 14px;margin:12px 0}
+  .opt-head{display:flex;align-items:center;justify-content:center;gap:7px;margin:0 0 9px}
   .tc-title{font-family:var(--disp);font-weight:800;font-size:14.5px;letter-spacing:.01em;color:var(--brand-d);white-space:nowrap}
-  .optbtn{appearance:none;border:none;cursor:pointer;border-radius:11px;padding:11px 18px;color:#fff;font-family:var(--disp);font-weight:800;font-size:14.5px;letter-spacing:.01em;transition:.12s;box-shadow:0 2px 9px rgba(15,26,46,.16);width:100%}
+  /* 4 elements on one row: lock · best-blue · best-red · lock (buttons take the slack and may wrap to 2 lines) */
+  .optrow{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:stretch}
+  .optrow .lockchk{justify-content:center;padding:8px 10px}
+  .optbtn{appearance:none;border:none;cursor:pointer;border-radius:11px;padding:10px 12px;color:#fff;font-family:var(--disp);font-weight:800;font-size:14px;letter-spacing:.01em;line-height:1.12;transition:.12s;box-shadow:0 2px 9px rgba(15,26,46,.16);width:100%}
   .optbtn:hover{transform:translateY(-1px)} .optbtn:active{transform:translateY(0)}
   .optbtn:disabled,.optbtn.is-locked{opacity:.4;cursor:not-allowed;box-shadow:none;filter:grayscale(.4);transform:none}
   .optbtn.our{background:var(--our)} .optbtn.our:hover{background:var(--our-d)}
   .optbtn.opp{background:var(--opp)} .optbtn.opp:hover{background:var(--opp-d)}
   .optbtn.our:disabled:hover,.optbtn.our.is-locked:hover{background:var(--our);transform:none}
   .optbtn.opp:disabled:hover,.optbtn.opp.is-locked:hover{background:var(--opp);transform:none}
-  .optbar-note{font-size:12.5px;font-weight:600;color:var(--brand-d);line-height:1.35}
+  .optbar-note{font-size:12.5px;font-weight:600;color:var(--brand-d);line-height:1.35;margin-top:9px;text-align:center}
   .optbar-note:empty{display:none}
-
-  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0 12px}
-  .toolbar label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
-  .tb-label{display:inline-flex;align-items:center;gap:7px;position:relative}
+  .scenblock{border-top:1px solid #E9DEF5;padding-top:11px;margin-top:11px}
+  .tb-label{display:inline-flex;align-items:center;gap:7px;position:relative;margin:0 0 8px}
+  .tb-label label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:600}
   .help.help-flush{position:static}   /* its popover anchors to .tb-label's left edge, so it can't run off a narrow screen */
   select,input,button{font-family:var(--body);font-size:14px}
-  .toolbar select{padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-weight:500;min-width:240px}
+  .scenrow{display:flex;gap:10px;align-items:center}
+  .scenrow select{flex:1 1 auto;min-width:0;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-weight:500}
+  .scenrow .btn{flex:0 0 auto;white-space:nowrap}
+  /* slim sticky score bar — slides down once the scoreboard scrolls out of view */
+  .stickybar{position:fixed;top:0;left:0;right:0;z-index:60;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);box-shadow:0 3px 12px rgba(15,26,46,.10);transform:translateY(-100%);transition:transform .2s ease;will-change:transform}
+  .stickybar.show{transform:translateY(0)}
+  .sb-inner{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:7px 16px}
+  .sb-score{font-family:var(--disp);font-weight:800;font-size:21px;line-height:1}
+  .sb-score.our{color:var(--our);text-align:left}
+  .sb-score.opp{color:var(--opp);text-align:right}
+  .sb-verdict{font-family:var(--disp);font-weight:800;font-size:13px;letter-spacing:.03em;text-transform:uppercase;text-align:center;white-space:nowrap}
+  .sb-verdict.our{color:var(--our-d)} .sb-verdict.opp{color:var(--opp-d)} .sb-verdict.tie{color:var(--ink-2)}
   .btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;border-radius:10px;font-weight:600;cursor:pointer;transition:.12s}
   .btn:hover{border-color:#b9c2d2;background:#fff}
   .btn.ghost{background:transparent}
@@ -260,17 +266,13 @@
     .sc{flex-direction:column-reverse;align-items:flex-start;gap:2px;padding:9px 12px}
     .sc.opp{flex-direction:column-reverse;align-items:flex-end}
     .sc .lab{font-size:13px} .sc .pts{font-size:30px;line-height:1}
-    /* label on its own line; dropdown + Reset share the next line */
-    .toolbar{margin:12px 0 4px;gap:8px}
-    .toolbar .tb-label{flex:1 1 100%}
-    .toolbar select{min-width:0;flex:1 1 0;width:auto}
-    .toolbar .btn{flex:0 0 auto;text-align:center;white-space:nowrap}
-    /* team controls: keep blue left / red right, optimize label + note below */
+    /* controls: keep the 4-up optimise row, tighten lock chips + buttons to fit narrow screens */
     .controls{padding:11px 12px}
-    .teamctrl{grid-template-columns:1fr 1fr;grid-template-areas:"our opp" "mid mid";gap:9px 10px}
-    .tc-col.our{grid-area:our} .tc-col.opp{grid-area:opp} .tc-mid{grid-area:mid}
     .tc-title{font-size:14px}
-    .optbtn{padding:10px 12px}
+    .optrow{gap:6px}
+    .optrow .lockchk{padding:8px 7px;font-size:12px;gap:5px}
+    .optbtn{padding:9px 8px;font-size:13px}
+    .sb-score{font-size:19px} .sb-verdict{font-size:12px} .sb-inner{padding:7px 14px}
     .stage{margin-top:22px}
     .stage-head h2{font-size:19px} .stage-head .hint{font-size:11.5px}
     .panel-body{padding:11px}
@@ -304,6 +306,15 @@
 <body>
   <noscript><div style="background:#FBF1D9;color:#A8740a;padding:14px 16px;text-align:center;font-weight:600;font-family:system-ui,sans-serif">This tool needs JavaScript to run. It looks like it's being shown in a file preview. Tap the ⋮ / share menu and choose “Open in browser” (Safari or Chrome) to use it.</div></noscript>
 
+  <!-- slim sticky score bar: Blue score · verdict · Red score (reveals on scroll) -->
+  <div class="stickybar" id="stickybar" aria-hidden="true">
+    <div class="sb-inner">
+      <span class="sb-score our" id="sb-our">–</span>
+      <span class="sb-verdict none" id="sb-verdict">—</span>
+      <span class="sb-score opp" id="sb-opp">–</span>
+    </div>
+  </div>
+
   <header class="banner">
     <div class="banner-inner">
       <div class="brand">
@@ -332,27 +343,27 @@
       <span class="wr opp" id="wr-opp">—</span>
     </div>
 
-    <!-- Controls (one compact card, below the result so the result screencaps clean): scenario · lock · optimise -->
+    <!-- Controls (one compact card, below the result so the result screencaps clean): auto-optimise · scenario -->
     <div class="controls">
-    <div class="toolbar">
-      <span class="tb-label"><label for="preset">Try a scenario</label><span class="help help-flush"><button type="button" class="help-btn" aria-label="About scenarios">?</button><span class="help-pop">Ready-made matchups — pick one to load both lineups. Lock a team (below) to keep it fixed and compare it against each opponent setup.</span></span></span>
-      <select id="preset"></select>
-      <button class="btn ghost" id="clear-times" title="Reset every runner's pace and 5K to 0:00 (keeps the team lineups) so you can type in the real race times">Clear record</button>
-    </div>
-    <div class="teamctrl">
-      <div class="tc-col our">
-        <label class="lockchk our" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-our"><span class="lk-txt">🔒 Lock <span id="lock-our-name">Blue</span></span></label>
-        <button class="optbtn our" id="opt-our" data-act="optimize" data-side="our">Best Blue lineup</button>
-      </div>
-      <div class="tc-mid">
-        <span class="tc-title">⚡ Auto-optimize <span class="help"><button type="button" class="help-btn" aria-label="About optimise and lock">?</button><span class="help-pop right">Optimise loads a side's best lineup against the other's current one. Lock a team to pin its lineup — times stay editable, but runners can't be added or removed — so switching scenarios only changes the other team, letting you compare against each opponent combo.</span></span></span>
+      <!-- Auto-optimize: title line, then one row of lock · best-blue · best-red · lock -->
+      <div class="optblock">
+        <div class="opt-head"><span class="tc-title">⚡ Auto-optimize</span><span class="help"><button type="button" class="help-btn" aria-label="About optimise and lock">?</button><span class="help-pop">Optimise loads a side's best lineup against the other's current one. Lock a team to pin its lineup — times stay editable, but runners can't be added or removed — so switching scenarios only changes the other team, letting you compare against each opponent combo.</span></span></div>
+        <div class="optrow">
+          <label class="lockchk our" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-our"><span class="lk-txt">🔒 <span id="lock-our-name">Blue</span></span></label>
+          <button class="optbtn our" id="opt-our" data-act="optimize" data-side="our">Best Blue lineup</button>
+          <button class="optbtn opp" id="opt-opp" data-act="optimize" data-side="opp">Best Red lineup</button>
+          <label class="lockchk opp" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-opp"><span class="lk-txt">🔒 <span id="lock-opp-name">Red</span></span></label>
+        </div>
         <div class="optbar-note" id="optnote"></div>
       </div>
-      <div class="tc-col opp">
-        <label class="lockchk opp" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-opp"><span class="lk-txt">🔒 Lock <span id="lock-opp-name">Red</span></span></label>
-        <button class="optbtn opp" id="opt-opp" data-act="optimize" data-side="opp">Best Red lineup</button>
+      <!-- Scenario: label line, then dropdown + Clear record -->
+      <div class="scenblock">
+        <span class="tb-label"><label for="preset">Try a scenario</label><span class="help help-flush"><button type="button" class="help-btn" aria-label="About scenarios">?</button><span class="help-pop">Ready-made matchups — pick one to load both lineups. Lock a team (above) to keep it fixed and compare it against each opponent setup.</span></span></span>
+        <div class="scenrow">
+          <select id="preset"></select>
+          <button class="btn ghost" id="clear-times" title="Reset every runner's pace and 5K to 0:00 (keeps the team lineups) so you can type in the real race times">Clear record</button>
+        </div>
       </div>
-    </div>
     </div>
 
     <details class="adv">
@@ -805,6 +816,19 @@ function renderResults(){
   else if(res.winner==='tie'){v.className='verdict tie';v.textContent='Dead tie';}
   else{v.className='verdict '+res.winner;v.textContent=(res.winner==='our'?state.our.name:state.opp.name)+' win';}
 
+  // slim sticky bar mirrors the scoreboard: Blue score · verdict · Red score
+  const sbar=el('stickybar');
+  if(sbar){
+    if(blank||res.rows.length===0){sbar.dataset.has='0';sbar.classList.remove('show');}
+    else{
+      el('sb-our').textContent=trim(res.ourPts); el('sb-opp').textContent=trim(res.oppPts);
+      const sv=el('sb-verdict');
+      if(res.winner==='tie'){sv.className='sb-verdict tie';sv.textContent='Dead tie';}
+      else{sv.className='sb-verdict '+res.winner;sv.textContent=(res.winner==='our'?state.our.name:state.opp.name)+' win';}
+      sbar.dataset.has='1';
+    }
+  }
+
   // race-day win % (deferred so typing/dragging stays snappy) — shown in its own row under the scores
   const tok=++winTok, swin=el('wr-our'), spwin=el('wr-opp'), wrow=el('winrow');
   const playable=!blank&&res.rows.some(r=>r.side==='our')&&res.rows.some(r=>r.side==='opp');
@@ -958,8 +982,7 @@ function optimize(side){
       const openCap=freeTeams.filter(t=>{const mm=t.memberIds.map(id=>resolve(side,id)).filter(Boolean);const tt=teamTime(mm,t.leg1Id,t.dnf,t.noshow);return (tt.type==='solo'||tt.type==='trio10k')&&!t.memberIds.some(id=>{const o=runnerById(side,id);return o&&o.ns;});});
       freeNS.forEach((id,i)=>{if(openCap[i])openCap[i].memberIds.push(id);});
       renderLineup(side);renderResults();
-      const bits=[]; if(lockedTeams.length)bits.push(lockedTeams.length+' locked'); if(nNS)bits.push(nNS+' no-show');
-      el('optnote').textContent=`Loaded the best ${side==='our'?'Blue':'Red'} lineup${bits.length?' ('+bits.join(', ')+')':''} → ${trim(best)} pts.`;
+      el('optnote').textContent='';   // no lingering success note — the board shows the result
     }else{note.textContent='could not optimize';}
   },20);
 }
@@ -1070,6 +1093,16 @@ document.addEventListener('click',e=>{
   if(btn){const h=btn.parentElement, was=h.classList.contains('open');open.forEach(x=>{if(x!==h)x.classList.remove('open');});h.classList.toggle('open',!was);return;}
   open.forEach(x=>x.classList.remove('open'));
 });
+
+// slim sticky score bar: slide it down once the scoreboard has scrolled above the viewport
+(function(){
+  const board=document.querySelector('.scorestrip'), bar=el('stickybar');
+  if(!board||!bar||!('IntersectionObserver'in window))return;
+  new IntersectionObserver(es=>{
+    const e=es[0], past=!e.isIntersecting && e.boundingClientRect.top<0;
+    bar.classList.toggle('show', past && bar.dataset.has==='1');
+  },{threshold:0}).observe(board);
+})();
 
 state=freshState();
 applyPreset(PRESETS[0]);
