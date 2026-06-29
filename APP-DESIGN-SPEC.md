@@ -101,12 +101,14 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis).
 - **Editable rosters** (Runner / **Pace** / **5K** / **NS** checkbox). Pace **and** 5K are
   editable and **bidirectional** (enter a pace → 5K fills in; enter a 5K → pace fills in).
   Tick **NS** to mark a runner absent.
-- **Time entry — three ways** on every time field: (1) **type digits** (`415`→4:15,
-  `2115`→21:15, `4`→4:00), committed on **blur** as well as Enter (iOS number pad has no
-  Return); (2) tap the **▾ wheel chevron** on the field to open a bottom-sheet picker with two
-  native `<select>`s (min : sec) that render as **iOS scroll wheels** — field-aware ranges
-  (pace small, 5K/leg mid, team-total large), "Done" writes back via a synthetic `change`;
-  (3) the values stay editable even on a locked side.
+- **Time entry — pointer-aware.** On a **fine pointer** (desktop): type digits (`415`→4:15,
+  `2115`→21:15, `4`→4:00), committed on **blur** as well as Enter, or click the **▾** for the
+  wheel. On a **coarse pointer** (touch, `matchMedia('(pointer:coarse)')`): every time field is
+  **`readonly`** and **tapping anywhere on it opens the wheel** — the whole field is the target
+  (no need to hit the tiny ▾, and no on-screen keyboard). The wheel is a bottom sheet with two
+  native `<select>`s (min : sec → **iOS scroll wheels**), field-aware ranges (pace small, 5K/leg
+  mid, team-total large); "Done" writes back via a synthetic `change`. Times stay editable on a
+  locked side.
 - **Card-based lineup builder:** pairs / trio (leg-1 selector) / solo / 10K-trio; **DNF**
   toggle; **per-team lock**; an editable **team total time** and editable **per-runner leg
   times**.
@@ -141,9 +143,9 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis).
 - **Result screencap** = the **left-aligned** page header (title only, no logo) →
   scoreboard → finish board, all stacked at the top. The controls sit **below** the board so
   they're out of frame.
-- **Clear record** (in the controls card) — after a confirm, zeroes every pace/5K (keeps the
-  lineups) to enter the real race times; the board falls back to the blank scorecard. Pick a
-  scenario to restore defaults.
+- **Clear record** (in the controls card) — a confirm-gated **full reset**: empties the finish
+  board (drops every **unlocked** team) and zeroes every pace/5K. Pick a scenario to load
+  lineups + default times again. *(Locked teams survive the clear.)*
 - **Scenario presets (dropdown):** default **"Start blank"**, then **Random** (both teams
   grouped by similar pace — the naive baseline) and four Red strategic plays each paired with
   **our optimised best response**. The actual lineups and scores live in
@@ -192,11 +194,14 @@ Choices that should *not* be silently undone.
   members never contribute time** (`teamTime` scores from present runners only) — `SLK + FF`
   computes exactly as SLK solo. Don't revert to "benching the no-show".
 
-### Clear record + blank scorecard (confirmed with the user)
-- **Clear record** (a confirm-gated reset) zeroes paces/5Ks but **keeps the lineups**, for
-  typing in real results. With everything at 0 the board is a **blank scorecard** (teams in
-  lineup order, dashes for rank/time/points, no winner) rather than a broken all-tied
-  ranking. Re-pick a scenario to restore defaults.
+### Clear record = full reset (revised after UAT)
+- **Clear record** is a confirm-gated **full reset**: it drops every **unlocked** team
+  (empties the finish board) *and* zeroes all paces/5Ks. Originally it kept the lineups (zero
+  times → a fill-in "blank scorecard"), but a user reported they "couldn't clear the finish
+  board" — so it now wipes the board too. Re-pick a scenario to restore lineups + defaults.
+- The **blank-scorecard** render path (`isBlankRecord` → teams in order with dashes) still
+  exists for any all-zero-times state (e.g. a locked team kept through a clear), it's just no
+  longer the main Clear-record outcome.
 
 ### Win probability placement
 - Win% was first inline next to the big score (looked cramped), then moved to its **own
@@ -374,6 +379,11 @@ Choices that should *not* be silently undone.
     two native `<select>`s (iOS scroll wheels), and typing now commits on **blur** (no Return key
     on the iOS number pad). Mobile time-field widths bumped so 5-char times + the chevron fit at
     16 px (the iOS no-zoom font size).
+35. **UAT round 2:** (a) the wheel ▾ was too small to tap — on **touch** (coarse pointer) the
+    time fields are now **`readonly` and tapping anywhere on the field** opens the wheel (whole
+    field = target, no keyboard); desktop keeps inline typing. (b) **Clear record now empties the
+    finish board** (drops unlocked teams) in addition to zeroing times — a user couldn't clear a
+    leftover team because the old Clear kept lineups.
 
 ---
 
