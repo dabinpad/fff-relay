@@ -628,24 +628,22 @@ function lineupFromNames(side,groups){
 // 2026-2027 format: 11 v 11, no no-show. Each side = 4 pairs + 1 trio (5 small teams).
 // A 3-name group is the trio; lineupFromNames sets its fastest member on leg 1.
 const LINEUPS={
+  // ONE robust Blue lineup — minimax across the four Red plays below (we commit before Red shows,
+  // so the same lineup is fielded in every scenario rather than reacting per-Red).
+  ourRobust:   [['LW','DB','Apoon'],['TT','WL'],['Cai','9J'],['CM','CP'],['SLK','Penny']],
   // Red archetypes (4 pairs + 1 trio)
-  redBalanced: [['LC','LP'],['SIN','LS'],['Sandro','Oyster'],['FL','5K'],['KTY','GoG','AK']],
-  redSpread:   [['LC','GoG'],['SIN','5K'],['Sandro','Oyster'],['FL','LS'],['KTY','LP','AK']],
-  redStacked:  [['LC','SIN'],['Sandro','FL'],['KTY','LP'],['LS','Oyster'],['5K','GoG','AK']],
   redOptimal:  [['LC','SIN'],['Sandro','FL'],['LP','LS'],['Oyster','5K'],['KTY','GoG','AK']],
-  // Our best response to each (solver-computed: 4 pairs + 1 trio)
-  ourVsBalanced:[['LW','DB','Apoon'],['TT','CM'],['WL','9J'],['Cai','CP'],['SLK','Penny']],
-  ourVsSpread:  [['LW','DB','Apoon'],['TT','CM'],['WL','CP'],['Cai','9J'],['SLK','Penny']],
-  ourVsStacked: [['Cai','LW','Apoon'],['TT','WL'],['CM','DB'],['CP','9J'],['SLK','Penny']],
-  ourVsOptimal: [['Cai','LW','Apoon'],['TT','WL'],['CM','DB'],['CP','SLK'],['9J','Penny']]
+  redBalanced: [['LC','LP'],['SIN','LS'],['Sandro','Oyster'],['FL','5K'],['KTY','GoG','AK']],
+  redStacked:  [['LC','SIN'],['Sandro','FL'],['KTY','LP'],['LS','Oyster'],['5K','GoG','AK']],
+  redSpread:   [['LC','GoG'],['SIN','5K'],['Sandro','Oyster'],['FL','LS'],['KTY','LP','AK']]
 };
-// Each scenario loads Red's setup + our best response (no no-show this year).
+// Every scenario fields the SAME robust Blue lineup vs a different Red play (no no-show this year).
 const PRESETS=[
-  {label:'— Start blank (everyone benched)'},
-  {label:'Red plays balanced — our best shot (41 : 35)',our:'ourVsBalanced',opp:'redBalanced'},
-  {label:'Red spreads its aces (41 : 35)',our:'ourVsSpread',opp:'redSpread'},
-  {label:'Red stacks both aces in one pair (39 : 37)',our:'ourVsStacked',opp:'redStacked'},
-  {label:'Toughest — Red’s optimal lineup (39.5 : 36.5)',our:'ourVsOptimal',opp:'redOptimal'}
+  {label:'Start blank'},
+  {label:'Toughest — Red’s optimal (37 : 39)',our:'ourRobust',opp:'redOptimal'},
+  {label:'Red plays balanced (37 : 39)',our:'ourRobust',opp:'redBalanced'},
+  {label:'Red stacks both aces (39 : 37)',our:'ourRobust',opp:'redStacked'},
+  {label:'Red spreads its aces (40 : 36)',our:'ourRobust',opp:'redSpread'}
 ];
 
 function sideLocked(side){const b=el(side==='our'?'lock-our':'lock-opp');return !!(b&&b.checked);}

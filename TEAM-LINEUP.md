@@ -31,79 +31,89 @@ may be added later** — these are estimates for the next cup.
 | GoG | 5:45 | AK | 6:45 | | |
 
 **Aggregate 5K** (sum of all 11): **Our 16,925 s vs Red 16,660 s** — Red's raw aggregate is
-**~265 s faster**. Despite that, our best response **wins every modelled Red lineup** this
-year (no no-show penalty to overcome — see below).
+**~265 s faster**. With no no-show penalty this year it's a close fight, but committing a
+single lineup (which is what really happens — we can't see Red first) leaves us a **slight
+underdog** to Red's strongest plays — see §2.
 
 ---
 
-## 2. Strategic analysis — a winnable fight this year
+## 2. Strategic analysis: one committed lineup, a close fight
 
-Re-verified with an independent Python brute-force model (enumerates all of our
-4-pairs-+-1-trio partitions — C(11,3) × 105 = **17,325** — against each Red lineup, plus a
-minimax loop for Red's toughest play).
+Verified with an independent Python brute-force model (`solve_robust.py`): it enumerates all
+of our 4-pairs-+-1-trio partitions — C(11,3) × 105 = **17,325** — and, for each, scores it
+against the four Red plays, then picks the **minimax** lineup (the one with the best
+worst-case margin).
 
-### The core finding
-Red is still **slightly faster on raw aggregate** (Red 16,660 s vs our 16,925 s, ≈265 s).
-But **there is no no-show penalty this year**, so we no longer spot Red a capped −5 team.
-With both sides at full strength, our best response **beats every realistic Red lineup**
-(see the scenario table in §3).
+### Why minimax, not per-Red best response
+Lineups are committed **before** seeing the opponent — we can't tailor a fresh counter to
+each Red play. So the right question isn't "what beats Red's balanced lineup?" but **"what
+single lineup holds up best across everything Red might do?"** That's a minimax: maximise our
+**worst-case** result over the plausible Red plays.
 
-### Why we win despite the slower aggregate
-The win is **positional, not raw-speed**. Our two fast teams (e.g. `WL + TT` ≈ 41:40) take
-the top points, and the **trio half-credit is our tool too**: we bury our three slowest
-into **one** trio so only that single team sits at the bottom, keeping the middle pairs
-competitive. Red's faster total is spread such that they don't out-place us where it counts.
+### The core finding — no lineup sweeps all four
+Red is **~265 s faster on raw aggregate** (16,660 vs 16,925 s). With one committed lineup,
+**no Blue partition beats all four Red plays.** The most robust one we can field is:
 
-### The Monte-Carlo caveat (race-day variance is real)
-On the **deterministic** board our best response wins every archetype. But the **race-day
-win-chance** (±10 s/km jitter) for the toughest case reads roughly **46% us / 54% Red** —
-because the point margin is thin and Red's faster aggregate means small jitters can flip the
-close positional battles. **Read both numbers:** we're favoured on the expected-points
-board, but it's close enough that execution on the day matters. This is the honest picture —
-not a structural loss.
+> **Our robust lineup:** `(LW*+DB+Apoon)trio · TT+WL · Cai+9J · CM+CP · SLK+Penny`
+> (`*` = the runner on Leg 1 of the trio)
 
-### Lessons
+It **loses by 2** to Red's two strongest plays (optimal & balanced, **37 : 39**) and **wins**
+the two weaker ones (stacks **39 : 37**, spread **40 : 36**). Worst case is a 2-point loss —
+better than any other single lineup. So: a genuine coin-flip-ish contest, tilted slightly to
+Red because of their aggregate-speed edge.
+
+### Why it's still close (positional play)
+Our two fast pairs (`WL+TT`, etc.) grab top points and the **trio half-credit is our tool
+too** — we bury our three slowest into **one** trio so only that team sits at the bottom.
+Against Red's spread/stacked plays that's enough to win; against Red's optimal/balanced
+plays Red just out-places us by one slot. The **race-day win-chance** (±10 s/km jitter) for
+the toughest case reads ≈ **46 % us / 54 % Red** — consistent with a slight underdog.
+
+### Lessons / how to tilt it our way
 - **Bury slows in ONE trio**, don't scatter them — one bottom team instead of several.
-- **Spread your fast runners** so they take separate top positions rather than over-stacking
-  one pair.
-- **Put the fastest on Leg 1 of the trio** (minimises its time → it doesn't sink further
-  than it must).
-- Keep every middle pair **ahead of a Red team** — positions, not raw speed, decide it.
+- **Spread your fast runners** so they take separate top positions rather than over-stacking.
+- **Fastest on Leg 1 of the trio** (minimises its time → it doesn't sink further than it must).
+- Our edge appears when **Red mis-plays** (spreads its aces, or stacks both in one pair). If
+  Red plays optimally/balanced we need **execution + race-day luck** — keep every middle pair
+  pushing to out-place a Red team.
 
 ---
 
 ## 3. The scenarios (app presets)
 
-The app's scenario dropdown **defaults to blank** (everyone benched — you build from
-scratch). Four loaded scenarios each pair a **Red archetype** with **our solver-optimal
-response**. `*` marks the runner placed on **Leg 1** of a trio.
+The dropdown **defaults to "Start blank"** (everyone benched — build your own). The four
+loaded scenarios all field the **same robust Blue lineup** (§2) against a **different Red
+play** — so you can see how our one committed lineup holds up. The toughest is listed first.
+`*` marks the runner on **Leg 1** of a trio.
 
-| Red plays | Our best response | Result |
-|---|---|---|
-| **Balanced** (aces split, slows buried in trio) | `(LW*+DB+Apoon)` · TT+CM · WL+9J · Cai+CP · SLK+Penny | **41 : 35 — win** |
-| **Spread aces** | `(LW*+DB+Apoon)` · TT+CM · WL+CP · Cai+9J · SLK+Penny | **41 : 35 — win** |
-| **Stacks both aces** in one pair | `(Cai*+LW+Apoon)` · TT+WL · CM+DB · CP+9J · SLK+Penny | **39 : 37 — win** |
-| **Optimal** (minimax-toughest) | `(Cai*+LW+Apoon)` · TT+WL · CM+DB · CP+SLK · 9J+Penny | **39.5 : 36.5 — win** |
+> **Our lineup (same in every scenario):**
+> `(LW*+DB+Apoon)trio · TT+WL · Cai+9J · CM+CP · SLK+Penny`
 
-The corresponding **Red** lineups loaded by each scenario:
+| # | Scenario (Red's play) | Red lineup | Result |
+|---|---|---|---|
+| 1 | **Toughest — Red optimal** | `(KTY*+GoG+AK)` · LC+SIN · Sandro+FL · LP+LS · Oyster+5K | **37 : 39 — Red** |
+| 2 | **Red plays balanced** | LC+LP · SIN+LS · Sandro+Oyster · FL+5K · `(KTY*+GoG+AK)` | **37 : 39 — Red** |
+| 3 | **Red stacks both aces** | LC+SIN · Sandro+FL · KTY+LP · LS+Oyster · `(5K*+GoG+AK)` | **39 : 37 — Blue** |
+| 4 | **Red spreads its aces** | LC+GoG · SIN+5K · Sandro+Oyster · FL+LS · `(KTY*+LP+AK)` | **40 : 36 — Blue** |
 
-| Scenario | Red lineup |
-|---|---|
-| Balanced | LC+LP · SIN+LS · Sandro+Oyster · FL+5K · `(KTY*+GoG+AK)` |
-| Spread aces | LC+GoG · SIN+5K · Sandro+Oyster · FL+LS · `(KTY*+LP+AK)` |
-| Stacked | LC+SIN · Sandro+FL · KTY+LP · LS+Oyster · `(5K*+GoG+AK)` |
-| Optimal | `(KTY*+GoG+AK)` · LC+SIN · Sandro+FL · LP+LS · Oyster+5K |
+So with the robust lineup we **split 2–2**: narrow 2-point losses to Red's two best plays,
+clear wins when Red mis-plays. That worst case (−2) is the best any single Blue lineup can
+guarantee across these four.
 
-Even Red's **minimax-optimal** lineup — the toughest play found by iterating Red's best
-response against ours — only narrows it to **39.5 : 36.5**: still our win.
+> **Caveat (deeper game theory):** if Red could *see* our committed lineup, its unconstrained
+> best response beats it ~41 : 35. But Red commits blind too, so the four named plays above
+> are the realistic set. There's no pure "solution" lineup — the full game needs mixed
+> strategies (the per-side best-responses oscillate), which is out of scope for the app.
 
 ---
 
 ## 4. How these map into the app
 
 - The rosters above are `DEFAULTS` in `index.html`; the scenarios are the `PRESETS` /
-  `LINEUPS` tables. A 3-name group is the trio; `lineupFromNames()` automatically sets its
-  **fastest** member on Leg 1.
+  `LINEUPS` tables. `ourRobust` is the single Blue lineup used by every scenario; the four
+  `red*` entries are Red's plays. A 3-name group is the trio; `lineupFromNames()` sets its
+  **fastest** member on Leg 1 automatically.
 - **Nil no-show this year**, so no preset marks an absent runner.
-- Use **🔒 Lock Blue / Lock Red** beside the scenario picker to pin one side, then cycle the
-  opponent scenarios to compare our score against each Red play.
+- Because Blue is identical across scenarios, you can just **cycle the dropdown** to watch our
+  committed lineup play each Red setup. Or **🔒 Lock Blue**, then run **Best Red lineup** /
+  cycle scenarios, to probe how Red might exploit us.

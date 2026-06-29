@@ -34,7 +34,7 @@ time, score the meet, and instantly see who wins** — with:
 - a **screenshot-ready result block** to share the outcome with the team.
 
 It exists to drive the lineup decision on race day and to explore the strategic question
-analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis--a-winnable-fight-this-year).
+analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis-one-committed-lineup-a-close-fight).
 
 ---
 
@@ -126,8 +126,9 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis--a-winnable-fi
 - **Clear record** (in the controls card) — after a confirm, zeroes every pace/5K (keeps the
   lineups) to enter the real race times; the board falls back to the blank scorecard. Pick a
   scenario to restore defaults.
-- **Scenario presets (dropdown):** default **"— Start blank (everyone benched)"** + four Red
-  archetypes paired with our best response. The actual lineups and scores live in
+- **Scenario presets (dropdown):** default **"Start blank"** + four scenarios that each field
+  **one robust Blue lineup** (minimax across the Red plays) vs a different Red play, toughest
+  first. The actual lineups and scores live in
   **[TEAM-LINEUP §3](TEAM-LINEUP.md#3-the-scenarios-app-presets)**.
 - **One compact controls card** (below the finish board, above the rules), stacked as four
   thin lines: (1) the centred **⚡ Auto-optimize** title, (2) a single row of **four**
@@ -321,6 +322,15 @@ Choices that should *not* be silently undone.
     → picker + Clear record); the persistent "Loaded the best…" optimise note was removed.
 29. **Sticky score bar re-added** (slim: Blue score · verdict · Red score; IntersectionObserver
     on `.scorestrip`) — supersedes its earlier removal in step 21, at the user's request.
+    Trigger later refined to fire at **half-scroll** (`intersectionRatio < 0.5`) rather than
+    when the scoreboard fully exits.
+30. **Scenarios reworked to a single robust (minimax) Blue lineup** (`solve_robust.py`):
+    instead of a tailored per-Red best response, every scenario now fields the **same** Blue
+    lineup — the one with the best worst-case margin across the four Red plays. First preset
+    simplified to **"Start blank"**; the **toughest Red is scenario #2**. Honest result: the
+    robust lineup **splits 2–2** (loses 37:39 to Red optimal/balanced, wins 39:37 / 40:36 vs
+    stacked / spread) — no single lineup sweeps all four. See
+    [TEAM-LINEUP §2–3](TEAM-LINEUP.md#2-strategic-analysis-one-committed-lineup-a-close-fight).
 
 ---
 
@@ -332,7 +342,8 @@ Choices that should *not* be silently undone.
   (`--no-sandbox`). Used for behavioural tests (lock guards, master-lock state, editable-time
   math, optimiser) **and** rendered screenshots (desktop + mobile). A **Python brute-force
   model** (using `fractions`) cross-checks the scoring numbers — the 2026-2027 presets were
-  verified live in-browser to match the solver exactly (41:35, 41:35, 39:37, 39.5:36.5). An
+  verified live in-browser to match the solver exactly (the robust lineup scores 37:39, 37:39,
+  39:37, 40:36 vs Red optimal / balanced / stacked / spread). An
   **adversarial multi-agent diff review** (4 lenses + verification) was run before finalising
   the lock/UI overhaul and caught 5 real defects (all fixed).
 - **iOS gotcha:** Safari/Chrome on iPhone can't open local files directly; use the hosted
@@ -358,7 +369,7 @@ Choices that should *not* be silently undone.
 
 ### Features, not fixes (skip unless wanted)
 3. **One-click equilibrium / minimax.** Alternating best-responses oscillate by design; the
-   strategic answer is the robust framing in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis--a-winnable-fight-this-year),
+   strategic answer is the robust framing in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis-one-committed-lineup-a-close-fight),
    not a solver in the app.
 4. **Save/share a result image** (beyond the manual screencap) — e.g. render-to-canvas
    export of the result block.
@@ -368,8 +379,8 @@ Choices that should *not* be silently undone.
 ## 8. Quick reference for a fresh session
 
 - **Open `index.html`** to see the current state; the default scenario is **blank** (rosters
-  loaded, everyone benched, board empty — you build from scratch). Pick a scenario to load a
-  Red archetype + our best response.
+  loaded, everyone benched, board empty — you build from scratch). Pick a scenario to field
+  our **one robust Blue lineup** against a Red play.
 - **Current cup = 2026-2027, 11 v 11, nil no-show.** Each side = 4 pairs + 1 trio (10 small
   teams; first 10 point slots `13…3` sum to 76 → 39+ wins). Team names "Our team" /
   "Opponent". Rules in [GAME-RULES](GAME-RULES.md); rosters + strategy in
@@ -382,8 +393,9 @@ Choices that should *not* be silently undone.
   result-first layout (left-aligned header → scores → board, controls below, win% below the
   board); **Clear record** + blank scorecard; the **one-card controls** (4 thin lines, 4-up
   optimise row, blue-left/red-right); the **slim sticky score bar** (score · verdict · score —
-  re-added by request); **no header logo** (removed — don't reintroduce); the blank
-  "— Start blank" default.
+  re-added by request); **no header logo** (removed — don't reintroduce); the **"Start blank"**
+  default; the scenarios all field **one robust (minimax) Blue lineup** vs each Red play (not a
+  per-Red best response).
 - **Not a bug:** the optimizer is a **best-response vs the other side's current lineup**;
   clicking both buttons oscillates by design (§2/§7).
 - **To publish:** merge the `claude/…` branch into `main` and push; Pages serves `index.html`
