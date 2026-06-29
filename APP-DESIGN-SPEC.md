@@ -347,8 +347,8 @@ Choices that should *not* be silently undone.
     on `.scorestrip`) — supersedes its earlier removal in step 21, at the user's request.
     Trigger later refined to fire at **half-scroll** (`intersectionRatio < 0.5`) rather than
     when the scoreboard fully exits.
-30. **Scenarios reworked to a single robust (minimax) Blue lineup** (`solve_robust.py`):
-    instead of a tailored per-Red best response, every scenario now fields the **same** Blue
+30. **Scenarios reworked to a single robust (minimax) Blue lineup** (a one-off brute-force
+    minimax script, since reverted — see step 32): instead of a tailored per-Red best response, every scenario now fields the **same** Blue
     lineup — the one with the best worst-case margin across the four Red plays. First preset
     simplified to **"Start blank"**; the **toughest Red is scenario #2**. Honest result: the
     robust lineup **splits 2–2** (loses 37:39 to Red optimal/balanced, wins 39:37 / 40:36 vs
@@ -357,7 +357,7 @@ Choices that should *not* be silently undone.
 31. **Points-table bug fix → derived scoring.** The points were a fixed 12-slot array
     (`[13,11,…,0]`), wrong for a 10-team meet. Replaced with **`pointsFor(K)`** derived from
     the live sub-team count (1st = K+1, last = 0, middle = K−i); the rules-drawer table is now
-    read-only. Win threshold for 10 teams is **28+ (sum 55)**. Re-ran `solve_robust.py` under
+    read-only. Win threshold for 10 teams is **28+ (sum 55)**. Re-ran the minimax script under
     the corrected points: same robust lineup, scores now **26:29 / 26:29 / 29:26 / 29:26**, and
     the race-day win-chance shows **Red favoured in 3 of 4** scenarios.
 32. **Scenarios: back to per-Red optimised + a Random baseline** (`solve_scenarios.py`).
@@ -398,7 +398,8 @@ Choices that should *not* be silently undone.
   `/opt/pw-browsers/chromium-*/chrome-linux/chrome`, driven via `playwright-core`
   (`--no-sandbox`). Used for behavioural tests (lock guards, master-lock state, editable-time
   math, optimiser) **and** rendered screenshots (desktop + mobile). A **Python brute-force
-  model** (using `fractions`) cross-checks the scoring numbers — the 2026-2027 presets were
+  model** — **`solve_scenarios.py`** (committed at the repo root; uses `fractions` for exact
+  arithmetic) — cross-checks the scoring numbers and the scenario lineups; the 2026-2027 presets were
   verified live in-browser to match the solver exactly (our optimised responses win 29.5:25.5 /
   30:25 / 29:26 / 30:25 vs Red optimal / balanced / stacked / spread; the naive Random matchup
   is 27:28, out of 55). An
