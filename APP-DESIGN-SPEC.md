@@ -43,9 +43,9 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis--a-winnable-fi
 - **One file, zero dependencies.** No external scripts/fonts/CDN. Native Apple system fonts.
   The header is **plain title text** ("FFF Don't Hide Legend Cup 2026-2027", left-aligned;
   the year wraps under "FFF" on narrow phones) — **no logo image**. *(An embedded base64
-  emblem and a scroll "sticky score bar" both existed earlier and were removed — see §4/§5.)*
-  The page header doubles as the branding above the result, so a top-down screencap is
-  self-contained.
+  emblem existed earlier and was removed — see §4/§5.)* The page header doubles as the
+  branding above the result, so a top-down screencap is self-contained. A **slim sticky score
+  bar** (score · verdict · score) slides in on scroll — see §4.
 - **Single source of truth for speed = the effective 5K.** Each runner has a `pace`
   (mm:ss/km) and an optional exact override `actSec` (a 5K time in seconds). `resolve()`
   exposes an *effective pace* `p = actSec/5` when an override is set, else
@@ -108,10 +108,10 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis--a-winnable-fi
   - **Per-team lock** (on a card) — the optimiser keeps that exact team fixed; its runners
     can't be added/removed (times stay editable). Use it to pin a chosen 10 km runner before
     optimising.
-  - **🔒 Lock Blue / 🔒 Lock Red** (by the scenario picker) — pins the whole side: switching
-    scenarios only rewrites the *other* team, its Optimise button is disabled, every
-    small-team lock is auto-checked, and its composition is frozen (add/remove/clear hidden;
-    NS/delete of a locked-in runner blocked). Restores individual locks when released.
+  - **🔒 Blue / 🔒 Red** (the compact lock chips in the Auto-optimize row) — pins the whole
+    side: switching scenarios only rewrites the *other* team, its Optimise button is disabled,
+    every small-team lock is auto-checked, and its composition is frozen (add/remove/clear
+    hidden; NS/delete of a locked-in runner blocked). Restores individual locks when released.
     **This is the "compare my lineup vs each opponent combo" tool.**
 - **Live finish board:** all small teams ranked (10 this year), with position, coloured
   medal, time, trio/no-show/DNF flag, and net points (no-show rows show their net −x, not
@@ -129,11 +129,17 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis--a-winnable-fi
 - **Scenario presets (dropdown):** default **"— Start blank (everyone benched)"** + four Red
   archetypes paired with our best response. The actual lineups and scores live in
   **[TEAM-LINEUP §3](TEAM-LINEUP.md#3-the-scenarios-app-presets)**.
-- **One compact controls card** (below the finish board, above the rules) wraps **both** the
-  scenario row (picker + **Clear record**) **and** the **Auto-optimize** panel (two
-  best-lineup buttons + the two whole-team locks), separated by a hairline — laid out
-  **blue-left / red-right** to mirror the scoreboard. Concise **"?" help popovers** replace
-  the old inline hints.
+- **One compact controls card** (below the finish board, above the rules), stacked as four
+  thin lines: (1) the centred **⚡ Auto-optimize** title, (2) a single row of **four**
+  elements — `🔒 Blue · Best Blue lineup · Best Red lineup · 🔒 Red` (`.optrow` grid
+  `auto 1fr 1fr auto`; the buttons take the slack and wrap to 2–3 lines on narrow phones),
+  (3) the **Try a scenario** label, (4) the scenario picker + **Clear record**. Still
+  **blue-left / red-right** to mirror the scoreboard; a hairline divides the optimise half
+  from the scenario half. Concise **"?" help popovers** replace the old inline hints.
+- **Slim sticky score bar** — a thin fixed header that slides down once the scoreboard
+  scrolls out of view: **Blue score · verdict · Red score** ("Our team win" in blue /
+  "Opponent win" in red / "Dead tie"). Mirrors the scoreboard live; hidden when the record is
+  blank or no lineups are set.
 
 ---
 
@@ -185,18 +191,31 @@ Choices that should *not* be silently undone.
   page header now does that job, so a top-down screencap is the shareable result.
 - The **win-chance row sits below the board** so it's outside that screencap.
 
-### Controls layout (one card) & the removed logo + sticky bar
-- The scenario row **and** the Lock/Optimise grid live in **one compact `.controls` card**
+### Controls layout (one card) & the removed logo
+- The Auto-optimise block **and** the scenario row live in **one compact `.controls` card**
   (light purple gradient, hairline divider between the two halves) — the user asked for "a
-  single session". Lock + Optimise are laid out **blue-left / red-right** to match the
-  scoreboard's two cards.
-- Team-lock chips read **"🔒 Lock Blue" / "🔒 Lock Red"** (short, not the full team name).
+  single session". Four thin lines: title → the 4-up `.optrow` (lock · best-blue · best-red ·
+  lock) → "Try a scenario" → picker + Clear record. Still **blue-left / red-right** to match
+  the scoreboard's two cards.
+- Team-lock chips are compact — **"🔒 Blue" / "🔒 Red"** (the word "Lock" was dropped so all
+  four elements fit on one row; the lock icon + the checkbox convey the action). The buttons
+  absorb the remaining width and may wrap to 2–3 lines — that's expected, not a bug.
+- **The persistent "Loaded the best … lineup → N pts" note was removed** — after optimising,
+  `#optnote` is cleared (the board shows the result). `#optnote` still carries the transient
+  guard messages ("Set the other team's lineup first", lock warnings) and collapses when empty.
 - **The header logo was removed** at the user's request — the banner is just the title text
-  now. The `.logo` CSS, the base64 data URI, and the `<img>` were all deleted.
-- **The scroll sticky score bar was removed** earlier (also at the user's request — "I don't
-  need the hanging effect now"). All `.stickybar`/`.sb*` markup + CSS, the `renderResults`
-  sb-update block, the IntersectionObserver, and `stickyName()` were deleted. **Don't
-  reintroduce the logo or the sticky bar** without being asked.
+  now. The `.logo` CSS, the base64 data URI, and the `<img>` were all deleted. **Don't
+  reintroduce the logo** without being asked.
+
+### Slim sticky score bar (re-added)
+- A thin `position:fixed` bar (`#stickybar`) that slides down once the `.scorestrip`
+  scoreboard scrolls above the viewport (revealed via an **IntersectionObserver** on
+  `.scorestrip`, toggling `.show`). Content: **Blue score · verdict · Red score**, where the
+  verdict reads "Our team win" (blue) / "Opponent win" (red) / "Dead tie".
+- `renderResults` keeps it in sync and sets `#stickybar`'s `data-has` to `1` only when there's
+  a real result (non-blank, lineups set); the observer won't reveal it otherwise. This is a
+  fresh, simpler build than the earlier removed bar (no logo, no team names — just scores +
+  verdict), re-added at the user's request ("add back the thin hanging header").
 
 ### Leg ordering within a pair (realism)
 - Slower runner leads off Leg 1, faster runner runs Leg 2 ("does the chasing") — cosmetic
@@ -216,13 +235,16 @@ Choices that should *not* be silently undone.
 
 ### Mobile-specific (iOS is primary)
 - **Header is left-aligned** on phone (`.brand{justify-content:flex-start;text-align:left}`);
-  the "2026-2027" year wraps onto its own line under "FFF" rather than centering.
+  the "2026-2027" year wraps onto its own line under "FFF" rather than centering, and stays
+  intact (`.yr{white-space:nowrap}` — it never splits at the hyphen).
 - Score cards **stack vertically** on phone (a wide 4-char score like 52.5 overflowed
   side-by-side).
-- The scenario **label is on its own line**; the **dropdown + "Clear record" share the next
-  line** (select uses `flex:1 1 0` so it shrinks instead of hogging the row).
-- Team controls keep blue-left/red-right via grid-areas; the optimize label + note drop
-  below.
+- The controls keep the **4-up optimise row** on phone (lock chips + buttons just tighten:
+  smaller padding/font, buttons wrap to 2–3 lines). The scenario **label is on its own line**;
+  the **dropdown + "Clear record" share the next line** (select uses `flex:1 1 auto` so it
+  shrinks instead of hogging the row).
+- The Auto-optimize row keeps all four elements on one line (lock chips + buttons just
+  tighten); blue-left/red-right is preserved.
 - Finish board uses the coloured medal + fixed-width columns; DNF checkbox sits inline; the
   desktop "VS" column is hidden. Inputs ≥16px to stop iOS auto-zoom.
 
@@ -287,6 +309,15 @@ Choices that should *not* be silently undone.
 25. **Docs consolidated** into `README.md` + three docs (`GAME-RULES.md`, `TEAM-LINEUP.md`,
     this spec); the old `Game-rules-2026.md`, `Relay_Problem_Spec_v1/v2`, and
     `FFF-Relay-App-Design-Notes.md` were folded in and removed (recoverable from git history).
+26. **`/start` + `/end` slash commands** added under `.claude/commands/`; **`.gitignore`**
+    added for the now-public repo; two Google-Drive links scrubbed from git history with
+    `git-filter-repo` (force-pushed).
+27. **Mobile header fix:** `2026-2027` kept on one line (`.yr{white-space:nowrap}`) — was
+    splitting at the hyphen on narrow iOS.
+28. **Controls re-flowed to four thin lines** (title → 4-up lock/buttons row → scenario label
+    → picker + Clear record); the persistent "Loaded the best…" optimise note was removed.
+29. **Sticky score bar re-added** (slim: Blue score · verdict · Red score; IntersectionObserver
+    on `.scorestrip`) — supersedes its earlier removal in step 21, at the user's request.
 
 ---
 
@@ -346,8 +377,9 @@ Choices that should *not* be silently undone.
   markers; penalty auto-applies — don't go back to benching); the **lock invariants** (locked
   = composition frozen, times editable; master lock cascades + restores via `_ulock`); the
   result-first layout (left-aligned header → scores → board, controls below, win% below the
-  board); **Clear record** + blank scorecard; the **one-card controls** (blue-left/red-right);
-  **no header logo** and **no sticky bar** (both removed — don't reintroduce); the blank
+  board); **Clear record** + blank scorecard; the **one-card controls** (4 thin lines, 4-up
+  optimise row, blue-left/red-right); the **slim sticky score bar** (score · verdict · score —
+  re-added by request); **no header logo** (removed — don't reintroduce); the blank
   "— Start blank" default.
 - **Not a bug:** the optimizer is a **best-response vs the other side's current lineup**;
   clicking both buttons oscillates by design (§2/§7).
