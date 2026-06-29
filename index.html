@@ -1096,14 +1096,15 @@ document.addEventListener('click',e=>{
   open.forEach(x=>x.classList.remove('open'));
 });
 
-// slim sticky score bar: slide it down once the scoreboard has scrolled above the viewport
+// slim sticky score bar: reveal once the scoreboard is ~half scrolled above the top
+// (the big scores have gone, but before the finish board reaches the top)
 (function(){
   const board=document.querySelector('.scorestrip'), bar=el('stickybar');
   if(!board||!bar||!('IntersectionObserver'in window))return;
   new IntersectionObserver(es=>{
-    const e=es[0], past=!e.isIntersecting && e.boundingClientRect.top<0;
+    const e=es[0], past=e.boundingClientRect.top<0 && e.intersectionRatio<0.5;
     bar.classList.toggle('show', past && bar.dataset.has==='1');
-  },{threshold:0}).observe(board);
+  },{threshold:[0,0.25,0.5,0.75,1]}).observe(board);
 })();
 
 state=freshState();
