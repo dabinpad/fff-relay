@@ -127,8 +127,14 @@
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 
   .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+  .panel.locked{border-color:var(--brand);box-shadow:0 0 0 2px rgba(112,48,160,.32),var(--shadow)}   /* whole-team lock: purple ring around the roster/lineup */
   .panel-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line-2)}
   .panel.our .panel-top{background:var(--our-bg)} .panel.opp .panel-top{background:var(--opp-bg)}
+  .panel.locked .panel-top{background:var(--brand-bg)}
+  .ptop-right{display:flex;align-items:center;gap:10px;flex:none}
+  .sidelock{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--ink-2);cursor:pointer;user-select:none;white-space:nowrap}
+  .sidelock input{width:15px;height:15px;margin:0;cursor:pointer;accent-color:var(--brand)}
+  .sidelock:has(input:checked){color:var(--brand)}
   .pteam{display:flex;align-items:center;gap:9px}
   .dot{width:11px;height:11px;border-radius:50%;flex:none}
   .our .dot{background:var(--our)} .opp .dot{background:var(--opp)}
@@ -148,6 +154,23 @@
   .roster input.r-5k{color:var(--ink-2)}
   .roster input.r-name:focus,.roster input.r-pace:focus,.roster input.r-5k:focus{outline:none;border-color:var(--our);background:#fff}
   .opp .roster input:focus{border-color:var(--opp)}
+  /* time fields: a small wheel-picker chevron overlaid on the right edge (type, or tap ▾ for the wheel) */
+  .timewrap{position:relative;display:inline-block}
+  .timewrap input{padding-right:15px!important;padding-left:4px!important}
+  .timewrap .wheelbtn{position:absolute;right:1px;top:1px;bottom:1px;width:13px;border:none;border-left:1px solid var(--line);background:transparent;color:var(--ink-2);font-size:8px;line-height:1;cursor:pointer;border-radius:0 7px 7px 0;padding:0;display:flex;align-items:center;justify-content:center}
+  .timewrap .wheelbtn:active{background:var(--brand-bg);color:var(--brand)}
+  /* wheel modal (bottom sheet) — native <select>s render as iOS scroll wheels */
+  .wheel{position:fixed;inset:0;z-index:200;display:flex;align-items:flex-end;justify-content:center;background:rgba(15,26,46,.45)}
+  .wheel[hidden]{display:none}
+  .wheel-card{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:460px;padding:14px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(0,0,0,.22)}
+  .wheel-head{display:flex;justify-content:space-between;align-items:center;font-family:var(--disp);font-weight:800;font-size:15px;color:var(--ink);margin-bottom:8px}
+  .wheel-x{border:none;background:none;font-size:20px;line-height:1;cursor:pointer;color:var(--ink-2);padding:2px 6px}
+  .wheel-rows{display:flex;align-items:center;justify-content:center;gap:12px;margin:6px 0 16px}
+  .wheel-rows select{font-size:22px;font-family:var(--mono);font-weight:700;padding:10px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+  .wheel-colon{font-size:24px;font-weight:800;color:var(--ink)}
+  .wheel-unit{font-size:11px;color:var(--ink-2);font-weight:600;text-transform:uppercase;letter-spacing:.04em;text-align:center;margin-top:3px}
+  .wheel-col{display:flex;flex-direction:column;align-items:center}
+  .wheel-done{width:100%;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:13px;font-family:var(--disp);font-weight:800;font-size:15px;cursor:pointer}
   .roster .fivek{font-family:var(--mono);font-weight:600;color:var(--ink-2);font-size:13px}
   .roster tr.nsrow td{opacity:.5} .roster tr.nsrow .r-name{text-decoration:line-through}
   .nsbox{display:inline-flex;align-items:center;justify-content:center;cursor:pointer} .nsbox input{width:17px;height:17px;accent-color:var(--opp);cursor:pointer}
@@ -281,7 +304,7 @@
     .panel-body{padding:11px}
     /* roster fits narrow + bigger taps */
     .roster th{padding:4px 4px 8px;font-size:10px} .roster td{padding:3px 4px}
-    .roster input.r-pace,.roster input.r-5k{width:66px} .roster input.r-name{padding:8px}
+    .roster input.r-pace,.roster input.r-5k{width:76px} .roster input.r-name{padding:8px}
     .x{padding:8px;font-size:18px}
     .chip{padding:6px 8px 6px 12px} .chip .cx{font-size:16px;padding:2px 5px}
     .addsel{padding:9px 10px} .dnfbox{font-size:13px;padding:4px 0}
@@ -299,7 +322,7 @@
   }
   @media (max-width:380px){
     .brand h1{font-size:20px} .sc .pts{font-size:26px}
-    .roster input.r-pace,.roster input.r-5k{width:58px}
+    .roster input.r-pace,.roster input.r-5k{width:72px}
     .frow{grid-template-columns:2.5em 24px minmax(0,1fr) auto 2.6em;gap:6px;padding:9px 10px}
     .frow .medal{width:24px;height:24px;font-size:11px}
   }
@@ -377,7 +400,7 @@
           <strong>Points</strong> — awarded by finishing position among all <em>N</em> sub-teams (blue + red): <b>1st = N+1</b>, <b>last = 0</b>, everyone in between counts down by one. The table above scales to the current number of teams (e.g. 10 teams → 11, 9, 8, … 2, 0). Higher total wins; a tie on points → faster combined time.<br>
           <strong>Trio</strong> = leg-1 runner (full) + average of the two leg-2 runners → <code>t_leg1 + (a+b)/2</code>. Fastest-on-leg-1 is set by default.<br>
           <strong>No-show (NS)</strong> — tick <b>NS</b> next to a runner in section&nbsp;1 to mark them absent. They stay on their team as a marker and that team automatically becomes a capped no-show team (<code>−5</code>, <strong>max 6 pts</strong>); a present teammate runs the full 10 km. <b>Optimise</b> still finds the lowest-cost sacrifice (solo <code>2×5K</code>, or a 10K-trio that buries a slow teammate).<br>
-          <strong>Smart time entry</strong> — type digits and press Enter: <code>415</code>→4:15, <code>2115</code>→21:15, <code>4</code>→4:00. In section&nbsp;1 you can enter either the <em>pace</em> (5K fills in) or the <em>5K</em> (pace fills in).<br>
+          <strong>Time entry</strong> — type digits then tap away (or Enter): <code>415</code>→4:15, <code>2115</code>→21:15, <code>4</code>→4:00; or tap the <b>▾</b> on a field for a min:sec wheel. In section&nbsp;1 you can enter either the <em>pace</em> (5K fills in) or the <em>5K</em> (pace fills in).<br>
           <strong>Clear all times</strong> — zeroes every pace/5K (keeping the lineups) so the board becomes a blank scorecard to fill in with the real race times.<br>
           <strong>DNF</strong> (toggle on a team) is placed last for 0 pts and takes an extra <code>−5</code>.<br>
           <strong>Actual times</strong> — both the <em>team total</em> (on each card) and each runner's <em>leg time</em> (next to their name) are editable. Editing the team total splits it proportionally across the runners; editing one runner's leg holds the team total and rebalances the partner — and the runner's pace updates to match.<br>
@@ -406,6 +429,19 @@
         <div class="panel opp" id="lineup-opp"></div>
       </div>
     </section>
+  </div>
+
+  <!-- shared wheel-picker (native selects render as iOS scroll wheels) for any time field -->
+  <div class="wheel" id="wheel" hidden>
+    <div class="wheel-card">
+      <div class="wheel-head"><span id="wheel-title">Set time</span><button type="button" class="wheel-x" id="wheel-cancel" aria-label="cancel">✕</button></div>
+      <div class="wheel-rows">
+        <span class="wheel-col"><select id="wheel-min" aria-label="minutes"></select><span class="wheel-unit">min</span></span>
+        <span class="wheel-colon">:</span>
+        <span class="wheel-col"><select id="wheel-sec" aria-label="seconds"></select><span class="wheel-unit">sec</span></span>
+      </div>
+      <button type="button" class="wheel-done" id="wheel-done">Done</button>
+    </div>
   </div>
 
 <script>
@@ -679,31 +715,45 @@ function applyPreset(p){
 
 /* =================== RENDER =================== */
 const el=id=>document.getElementById(id);
+const WHEEL_BTN='<button type="button" class="wheelbtn" data-act="wheel" tabindex="-1" aria-label="pick time with wheel">▾</button>';
 function syncLockLabels(){const o=el('lock-our-name'),p=el('lock-opp-name');if(o)o.textContent='Blue';if(p)p.textContent='Red';}   // short, colour-coded labels (not the full team name)
 function syncLockUI(){['our','opp'].forEach(s=>{const b=el(s==='our'?'opt-our':'opt-opp');if(!b)return;const locked=sideLocked(s);b.disabled=locked;b.classList.toggle('is-locked',locked);b.title=locked?'This team is locked — untick its lock by the scenario picker to optimise.':'';});}
+// the whole-team (side) lock, settable from the controls chip OR either section's panel toggle (all kept in sync).
+// ON: every small team is locked (prior individual locks remembered in _ulock); OFF: restore them.
+function setSideLock(side,locked){
+  const box=el(side==='our'?'lock-our':'lock-opp'); if(box)box.checked=locked;
+  if(locked) state[side].teams.forEach(t=>{t._ulock=!!t.lock;t.lock=true;});
+  else state[side].teams.forEach(t=>{t.lock=('_ulock'in t)?t._ulock:false;delete t._ulock;});
+  syncLockUI();renderRoster(side);renderLineup(side);renderResults();
+}
 function renderAll(){renderRoster('our');renderRoster('opp');renderLineup('our');renderLineup('opp');renderPoints();renderResults();syncLockLabels();syncLockUI();}
 
 function renderRoster(side){
   const T=state[side];
+  const locked=sideLocked(side);
   const rows=T.runners.map(r=>`
     <tr data-id="${r.id}" class="${r.ns?'nsrow':''}">
       <td><input class="r-name" value="${escapeAttr(r.name)}" data-side="${side}" data-id="${r.id}" aria-label="runner name"></td>
-      <td class="num"><input class="r-pace" value="${escapeAttr(r.pace)}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="pace per km"></td>
-      <td class="num"><input class="r-5k" id="fivek-${r.id}" value="${r.actSec!=null?fmtTime(r.actSec):fmtTime(fiveK(paceToSec(r.pace)??0))}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="5K time"></td>
+      <td class="num"><span class="timewrap"><input class="r-pace" value="${escapeAttr(r.pace)}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="pace per km">${WHEEL_BTN}</span></td>
+      <td class="num"><span class="timewrap"><input class="r-5k" id="fivek-${r.id}" value="${r.actSec!=null?fmtTime(r.actSec):fmtTime(fiveK(paceToSec(r.pace)??0))}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="5K time">${WHEEL_BTN}</span></td>
       <td class="num"><label class="nsbox" title="no-show: marks this runner absent. They stay on their team as a marker and that team auto-becomes a capped 10 km no-show team (−5, max 6 pts); a present teammate runs the 10 km."><input type="checkbox" class="r-ns" data-side="${side}" data-id="${r.id}" ${r.ns?'checked':''}></label></td>
-      <td class="num"><button class="x" data-act="del-runner" data-side="${side}" data-id="${r.id}" title="remove">×</button></td>
+      <td class="num"><button class="x" data-act="del-runner" data-side="${side}" data-id="${r.id}" title="remove" ${locked?'disabled':''}>×</button></td>
     </tr>`).join('');
+  el('roster-'+side).classList.toggle('locked',locked);
   el('roster-'+side).innerHTML=`
     <div class="panel-top">
       <div class="pteam"><span class="dot"></span><input class="tname" value="${escapeAttr(T.name)}" data-side="${side}" data-field="teamname" aria-label="team name"></div>
-      <span class="meta">${T.runners.length} runners</span>
+      <span class="ptop-right">
+        <label class="sidelock" title="Lock this team — pins its lineup across scenarios; runners can't be added or removed (times stay editable)."><input type="checkbox" data-act="side-lock" data-side="${side}" ${locked?'checked':''}> 🔒 Lock</label>
+        <span class="meta">${T.runners.length} runners</span>
+      </span>
     </div>
     <div class="panel-body">
       <table class="roster">
         <thead><tr><th>Runner</th><th class="num">Pace /km</th><th class="num">5K</th><th class="num">NS</th><th class="num"></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
-      <div class="add-runner"><button class="btn btn-sm" data-act="add-runner" data-side="${side}">+ Add runner</button></div>
+      ${locked?'':`<div class="add-runner"><button class="btn btn-sm" data-act="add-runner" data-side="${side}">+ Add runner</button></div>`}
     </div>`;
 }
 
@@ -713,7 +763,7 @@ function chip(side,r,inPool,locked){
   let time;
   if(inPool) time=`<span class="pace">${fmtTime(fiveK(r.p))}</span>`;
   else if(r.ns) time=`<span class="pace ns-tag">no-show</span>`;
-  else time=`<input class="pace leg-edit" data-act="edit-leg" data-side="${side}" data-id="${r.id}" value="${fmtTime(fiveK(r.p))}" inputmode="numeric" aria-label="${escapeAttr(r.name)} leg time" title="actual 5 km leg time — sets this runner's pace and rebalances the partner to keep the team total">`;
+  else time=`<span class="timewrap"><input class="pace leg-edit" data-act="edit-leg" data-side="${side}" data-id="${r.id}" value="${fmtTime(fiveK(r.p))}" inputmode="numeric" aria-label="${escapeAttr(r.name)} leg time" title="actual 5 km leg time — sets this runner's pace and rebalances the partner to keep the team total">${WHEEL_BTN}</span>`;
   // locked teams and no-show markers keep their runners — no remove button
   return `<span class="chip${locked?' chip-locked':''}${r.ns?' chip-ns':''}" ${inPool?`data-act="pool-add" data-side="${side}" data-id="${r.id}"`:''}>
     <span>${escapeHtml(r.name)}</span>${time}
@@ -761,7 +811,7 @@ function renderLineup(side){
         <span style="display:flex;align-items:center;gap:8px">
           ${badge}
           ${(tt.t!=null&&isFinite(tt.t)&&members.length>=1&&!t.dnf)
-            ? `<input class="tcard-time tt-edit" data-act="edit-total" data-side="${side}" data-team="${t.id}" value="${fmtTime(tt.t)}" inputmode="numeric" aria-label="Team ${idx+1} total time" title="actual team total time — splits proportionally across the runners">`
+            ? `<span class="timewrap"><input class="tcard-time tt-edit" data-act="edit-total" data-side="${side}" data-team="${t.id}" value="${fmtTime(tt.t)}" inputmode="numeric" aria-label="Team ${idx+1} total time" title="actual team total time — splits proportionally across the runners">${WHEEL_BTN}</span>`
             : `<span class="tcard-time">${tt.t==null?'—':fmtTime(tt.t)}</span>`}
           ${t.lock?'':`<button class="x" data-act="del-team" data-side="${side}" data-team="${t.id}" title="remove team">×</button>`}
         </span>
@@ -781,10 +831,14 @@ function renderLineup(side){
   const totalTeams=T.teams.length;
   const nsRunners=T.runners.filter(r=>r.ns);
   const nsBanner=nsRunners.length?`<div class="ns-banner">⚠︎ no-show: <b>${nsRunners.map(r=>escapeHtml(r.name)).join(', ')}</b> — kept on a capped 10 km no-show team (−5, max 6 pts each); a present teammate runs the 10 km. <b>Best ${side==='our'?'Blue':'Red'} lineup</b> finds the lowest-cost sacrifice.</div>`:'';
+  el('lineup-'+side).classList.toggle('locked',sideLocked(side));
   el('lineup-'+side).innerHTML=`
     <div class="panel-top">
       <div class="pteam"><span class="dot"></span><span class="tcard-name" style="font-size:15px;color:var(--ink)">${escapeHtml(T.name)}</span></div>
-      <span class="meta">${totalTeams} teams · ${un.length} unassigned${nsRunners.length?' · '+nsRunners.length+' no-show':''}</span>
+      <span class="ptop-right">
+        <label class="sidelock" title="Lock this team — pins its lineup across scenarios; runners can't be added or removed (times stay editable)."><input type="checkbox" data-act="side-lock" data-side="${side}" ${sideLocked(side)?'checked':''}> 🔒 Lock</label>
+        <span class="meta">${totalTeams} teams · ${un.length} unassigned${nsRunners.length?' · '+nsRunners.length+' no-show':''}</span>
+      </span>
     </div>
     <div class="panel-body">
       ${nsBanner}
@@ -1040,6 +1094,7 @@ document.addEventListener('change',e=>{
   if(t.dataset.act==='set-leg1'){const team=findTeam(side,+t.dataset.team);if(team){team.leg1Id=+t.value;renderLineup(side);renderResults();}return;}
   if(t.dataset.act==='toggle-dnf'){const team=findTeam(side,+t.dataset.team);if(team){team.dnf=t.checked;renderLineup(side);renderResults();}return;}
   if(t.dataset.act==='toggle-lock'){const team=findTeam(side,+t.dataset.team);if(team){team.lock=t.checked;renderLineup(side);renderResults();}return;}
+  if(t.dataset.act==='side-lock'){setSideLock(side,t.checked);return;}   // whole-team lock from a section panel
   if(t.dataset.act==='edit-total'){editTeamTotal(side,+t.dataset.team,t.value);return;}
   if(t.dataset.act==='edit-leg'){editMemberLeg(side,+t.dataset.id,t.value);return;}
   if(t.classList.contains('r-ns')){const r=runnerById(side,+t.dataset.id);if(r){
@@ -1053,13 +1108,14 @@ document.addEventListener('change',e=>{
 document.addEventListener('click',e=>{
   const b=e.target.closest('[data-act]'); if(!b)return;
   const act=b.dataset.act, side=b.dataset.side;
+  if(act==='wheel'){const inp=b.closest('.timewrap').querySelector('input');if(inp)openWheel(inp);return;}
   if(act==='pool-add'){addToBestSpot(side,+b.dataset.id);return;}
   if(act==='member-remove'){const tm=state[side].teams.find(t=>t.memberIds.includes(+b.dataset.id));if(tm&&tm.lock)return;removeMember(side,+b.dataset.id);return;}   // can't remove from a locked team
   if(act==='del-team'){const tm=findTeam(side,+b.dataset.team);if(tm&&tm.lock)return;state[side].teams=state[side].teams.filter(t=>t.id!==+b.dataset.team);renderLineup(side);renderResults();return;}   // can't delete a locked team
   if(act==='add-team'){if(sideLocked(side))return;state[side].teams.push({id:++uid,memberIds:[],leg1Id:null,dnf:false,noshow:false,lock:false});renderLineup(side);renderResults();return;}
   if(act==='clear-lineup'){state[side].teams=state[side].teams.filter(t=>t.lock);renderLineup(side);renderResults();el('optnote').textContent='';return;}   // keep locked teams
   if(act==='optimize'){optimize(side);return;}
-  if(act==='add-runner'){state[side].runners.push({id:++uid,name:'New',pace:'5:00',actSec:null,ns:false});renderRoster(side);renderLineup(side);renderResults();return;}
+  if(act==='add-runner'){if(sideLocked(side))return;state[side].runners.push({id:++uid,name:'New',pace:'5:00',actSec:null,ns:false});renderRoster(side);renderLineup(side);renderResults();return;}
   if(act==='del-runner'){delRunner(side,+b.dataset.id);return;}
 });
 
@@ -1084,6 +1140,7 @@ function removeMember(side,runnerId){
   renderLineup(side);renderResults();
 }
 function delRunner(side,id){
+  if(sideLocked(side)){el('optnote').textContent=`${side==='our'?'Blue':'Red'} is locked — untick its 🔒 Lock to edit the roster.`;return;}  // whole side pinned
   if(state[side].teams.some(t=>t.lock&&t.memberIds.includes(id))){el('optnote').textContent='Unlock that runner’s team before deleting them.';return;}  // can't delete a runner who is on a locked team
   state[side].runners=state[side].runners.filter(r=>r.id!==id);
   state[side].teams.forEach(t=>{t.memberIds=t.memberIds.filter(x=>x!==id);if(t.leg1Id===id)t.leg1Id=null;});
@@ -1102,21 +1159,55 @@ function isBlankRecord(){return ['our','opp'].every(side=>state[side].runners.ev
 el('preset').innerHTML=PRESETS.map((p,i)=>`<option value="${i}">${p.label}</option>`).join('');
 el('preset').addEventListener('change',e=>applyPreset(PRESETS[+e.target.value]));
 el('clear-times').addEventListener('click',clearAllTimes);   // zero every pace/5K (keeps the lineups) for entering live results
-// master team-lock: ticks/unticks every small-team lock on that side, disables its optimise, and pins it across scenarios.
-// Individual small-team locks set before the master goes on are remembered (t._ulock) and restored when it goes off.
-['lock-our','lock-opp'].forEach(id=>el(id).addEventListener('change',e=>{
-  const side=id==='lock-our'?'our':'opp';
-  if(e.target.checked) state[side].teams.forEach(t=>{t._ulock=!!t.lock;t.lock=true;});
-  else state[side].teams.forEach(t=>{t.lock=('_ulock'in t)?t._ulock:false;delete t._ulock;});
-  syncLockUI();renderLineup(side);renderResults();
-}));
+// master team-lock chips (controls card) → the shared setSideLock (panel toggles use the same).
+['lock-our','lock-opp'].forEach(id=>el(id).addEventListener('change',e=>setSideLock(id==='lock-our'?'our':'opp',e.target.checked)));
+// keep a popover inside the viewport (shift it horizontally if it would overflow an edge)
+function clampPopover(pop){
+  pop.style.transform='';                                  // reset before measuring
+  const r=pop.getBoundingClientRect(), M=8; let dx=0;
+  if(r.right>innerWidth-M) dx=(innerWidth-M)-r.right;       // pull left off the right edge
+  if(r.left+dx<M) dx=M-r.left;                              // but never past the left edge
+  if(dx) pop.style.transform=`translateX(${Math.round(dx)}px)`;
+}
 // "?" help popovers: tap to toggle, tap elsewhere to close
 document.addEventListener('click',e=>{
   const btn=e.target.closest('.help-btn');
   const open=document.querySelectorAll('.help.open');
-  if(btn){const h=btn.parentElement, was=h.classList.contains('open');open.forEach(x=>{if(x!==h)x.classList.remove('open');});h.classList.toggle('open',!was);return;}
+  if(btn){const h=btn.parentElement, was=h.classList.contains('open');open.forEach(x=>{if(x!==h)x.classList.remove('open');});h.classList.toggle('open',!was);
+    if(!was){const pop=h.querySelector('.help-pop');if(pop)clampPopover(pop);}
+    return;}
   open.forEach(x=>x.classList.remove('open'));
 });
+
+/* ---- time wheel picker: tap ▾ on any time field → two native selects (iOS scroll wheels) ---- */
+let wheelTarget=null;
+function openWheel(input){
+  wheelTarget=input;
+  const isPace=input.classList.contains('r-pace');
+  const isTotal=input.classList.contains('tcard-time');
+  const [lo,hi]=isPace?[2,15]:(isTotal?[20,90]:[10,60]);          // pace small · team total large · 5K/leg mid
+  let mm=isPace?5:(isTotal?40:25), ss=0;
+  const cur=parseTimeInput(input.value)||'';
+  if(cur.includes(':')){const p=cur.split(':');const a=parseInt(p[0],10);if(!isNaN(a))mm=a;ss=parseInt(p[1],10)||0;}
+  const mlo=Math.min(lo,mm), mhi=Math.max(hi,mm);                  // always include the current value
+  const minSel=el('wheel-min'),secSel=el('wheel-sec');
+  minSel.innerHTML='';for(let m=mlo;m<=mhi;m++)minSel.insertAdjacentHTML('beforeend',`<option value="${m}" ${m===mm?'selected':''}>${m}</option>`);
+  secSel.innerHTML='';for(let s=0;s<60;s++)secSel.insertAdjacentHTML('beforeend',`<option value="${s}" ${s===ss?'selected':''}>${String(s).padStart(2,'0')}</option>`);
+  el('wheel-title').textContent=isPace?'Pace — min : sec / km':'Time — min : sec';
+  el('wheel').hidden=false;
+}
+function closeWheel(){el('wheel').hidden=true;wheelTarget=null;}
+function applyWheel(){
+  if(wheelTarget){
+    const m=+el('wheel-min').value, s=+el('wheel-sec').value;
+    wheelTarget.value=m+':'+String(s).padStart(2,'0');
+    wheelTarget.dispatchEvent(new Event('change',{bubbles:true}));   // reuse the field's existing parse + commit path
+  }
+  closeWheel();
+}
+el('wheel-done').addEventListener('click',applyWheel);
+el('wheel-cancel').addEventListener('click',closeWheel);
+el('wheel').addEventListener('click',e=>{if(e.target===el('wheel'))closeWheel();});   // tap the backdrop to dismiss
 
 // slim sticky score bar: reveal once the scoreboard is ~half scrolled above the top
 // (the big scores have gone, but before the finish board reaches the top)

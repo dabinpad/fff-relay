@@ -101,8 +101,12 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis).
 - **Editable rosters** (Runner / **Pace** / **5K** / **NS** checkbox). Pace **and** 5K are
   editable and **bidirectional** (enter a pace → 5K fills in; enter a 5K → pace fills in).
   Tick **NS** to mark a runner absent.
-- **Smart time entry** on every time field — type digits + Enter: `415`→4:15, `2115`→21:15,
-  `4`→4:00.
+- **Time entry — three ways** on every time field: (1) **type digits** (`415`→4:15,
+  `2115`→21:15, `4`→4:00), committed on **blur** as well as Enter (iOS number pad has no
+  Return); (2) tap the **▾ wheel chevron** on the field to open a bottom-sheet picker with two
+  native `<select>`s (min : sec) that render as **iOS scroll wheels** — field-aware ranges
+  (pace small, 5K/leg mid, team-total large), "Done" writes back via a synthetic `change`;
+  (3) the values stay editable even on a locked side.
 - **Card-based lineup builder:** pairs / trio (leg-1 selector) / solo / 10K-trio; **DNF**
   toggle; **per-team lock**; an editable **team total time** and editable **per-runner leg
   times**.
@@ -118,11 +122,15 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis).
   - **Per-team lock** (on a card) — the optimiser keeps that exact team fixed; its runners
     can't be added/removed (times stay editable). Use it to pin a chosen 10 km runner before
     optimising.
-  - **🔒 Blue / 🔒 Red** (the compact lock chips in the Auto-optimize row) — pins the whole
-    side: switching scenarios only rewrites the *other* team, its Optimise button is disabled,
-    every small-team lock is auto-checked, and its composition is frozen (add/remove/clear
-    hidden; NS/delete of a locked-in runner blocked). Restores individual locks when released.
-    **This is the "compare my lineup vs each opponent combo" tool.**
+  - **Whole-team (side) lock** — togglable from **three** synced places: the compact 🔒 chips
+    in the Auto-optimize row **and** a "🔒 Lock" toggle in each section's panel header (roster
+    *and* lineup). All route through `setSideLock(side, locked)`. Locking pins the side:
+    switching scenarios only rewrites the *other* team, its Optimise button is disabled, every
+    small-team lock is auto-checked, its composition is frozen (in **section 1** the delete ×
+    are disabled and "+ Add runner" is hidden; NS/delete blocked), and a **purple ring**
+    (`.panel.locked`) is drawn around that side's roster **and** lineup panels (times stay
+    editable). Restores individual locks when released. **The "compare my lineup vs each
+    opponent combo" tool.**
 - **Live finish board:** all small teams ranked (10 this year), with position, coloured
   medal, time, trio/no-show/DNF flag, and net points (no-show rows show their net −x, not
   the capped raw). When the record is blank (after *Clear record*) it becomes a
@@ -358,6 +366,14 @@ Choices that should *not* be silently undone.
     Now it calls `fillRandom(side)` to drop in that side's Random (similar-pace) lineup — so a
     blank board always gets *something* on the finish board. Normal optimisation is unchanged
     whenever the opponent already has a lineup.
+34. **UAT round (iOS):** (a) help popovers now **clamp to the viewport** (`clampPopover` shifts
+    them so they never run off the right edge); (b) the **whole-team lock** is now togglable from
+    each section's panel header too (`setSideLock`, all toggles synced) and draws a **purple ring**
+    around the locked roster + lineup, with section-1 delete/add disabled while locked;
+    (c) **time wheel picker** added — a ▾ chevron on every time field opens a bottom-sheet with
+    two native `<select>`s (iOS scroll wheels), and typing now commits on **blur** (no Return key
+    on the iOS number pad). Mobile time-field widths bumped so 5-char times + the chevron fit at
+    16 px (the iOS no-zoom font size).
 
 ---
 
