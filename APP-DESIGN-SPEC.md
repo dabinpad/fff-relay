@@ -197,9 +197,10 @@ Choices that should *not* be silently undone.
   single session". Four thin lines: title → the 4-up `.optrow` (lock · best-blue · best-red ·
   lock) → "Try a scenario" → picker + Clear record. Still **blue-left / red-right** to match
   the scoreboard's two cards.
-- Team-lock chips are compact — **"🔒 Blue" / "🔒 Red"** (the word "Lock" was dropped so all
-  four elements fit on one row; the lock icon + the checkbox convey the action). The buttons
-  absorb the remaining width and may wrap to 2–3 lines — that's expected, not a bug.
+- Team-lock chips are a narrow **2-row stack** — `[checkbox 🔒]` on top, the team name
+  ("Blue"/"Red") below (`.lk-top` over `.lk-name`; the word "Lock" was dropped). Keeping the
+  chips narrow lets the two buttons take the slack and wrap to a tidy **2 lines** ("Best Blue"
+  / "lineup") rather than 3.
 - **The persistent "Loaded the best … lineup → N pts" note was removed** — after optimising,
   `#optnote` is cleared (the board shows the result). `#optnote` still carries the transient
   guard messages ("Set the other team's lineup first", lock warnings) and collapses when empty.

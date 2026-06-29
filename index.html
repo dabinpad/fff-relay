@@ -69,7 +69,7 @@
   .tc-title{font-family:var(--disp);font-weight:800;font-size:14.5px;letter-spacing:.01em;color:var(--brand-d);white-space:nowrap}
   /* 4 elements on one row: lock · best-blue · best-red · lock (buttons take the slack and may wrap to 2 lines) */
   .optrow{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:stretch}
-  .optrow .lockchk{justify-content:center;padding:8px 10px}
+  .optrow .lockchk{padding:7px 9px}
   .optbtn{appearance:none;border:none;cursor:pointer;border-radius:11px;padding:10px 12px;color:#fff;font-family:var(--disp);font-weight:800;font-size:14px;letter-spacing:.01em;line-height:1.12;transition:.12s;box-shadow:0 2px 9px rgba(15,26,46,.16);width:100%}
   .optbtn:hover{transform:translateY(-1px)} .optbtn:active{transform:translateY(0)}
   .optbtn:disabled,.optbtn.is-locked{opacity:.4;cursor:not-allowed;box-shadow:none;filter:grayscale(.4);transform:none}
@@ -100,7 +100,9 @@
   .btn:hover{border-color:#b9c2d2;background:#fff}
   .btn.ghost{background:transparent}
   .btn-sm{padding:5px 10px;font-size:12.5px;border-radius:8px}
-  .lockchk{display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;letter-spacing:normal;text-transform:none;color:var(--ink);transition:.12s;user-select:none}
+  /* lock chip = a narrow 2-row stack: [checkbox 🔒] over the team name, so the buttons get more width */
+  .lockchk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:700;letter-spacing:normal;text-transform:none;color:var(--ink);line-height:1.05;transition:.12s;user-select:none}
+  .lockchk .lk-top{display:inline-flex;align-items:center;gap:4px}
   .lockchk:hover{border-color:#b9c2d2;background:#fff}
   .lockchk input{width:16px;height:16px;cursor:pointer;margin:0}
   .lockchk.our input{accent-color:var(--our)} .lockchk.opp input{accent-color:var(--opp)}
@@ -270,7 +272,7 @@
     .controls{padding:11px 12px}
     .tc-title{font-size:14px}
     .optrow{gap:6px}
-    .optrow .lockchk{padding:8px 7px;font-size:12px;gap:5px}
+    .optrow .lockchk{padding:7px 6px;font-size:11.5px;gap:3px}
     .optbtn{padding:9px 8px;font-size:13px}
     .sb-score{font-size:19px} .sb-verdict{font-size:12px} .sb-inner{padding:7px 14px}
     .stage{margin-top:22px}
@@ -349,10 +351,10 @@
       <div class="optblock">
         <div class="opt-head"><span class="tc-title">⚡ Auto-optimize</span><span class="help"><button type="button" class="help-btn" aria-label="About optimise and lock">?</button><span class="help-pop">Optimise loads a side's best lineup against the other's current one. Lock a team to pin its lineup — times stay editable, but runners can't be added or removed — so switching scenarios only changes the other team, letting you compare against each opponent combo.</span></span></div>
         <div class="optrow">
-          <label class="lockchk our" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-our"><span class="lk-txt">🔒 <span id="lock-our-name">Blue</span></span></label>
+          <label class="lockchk our" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><span class="lk-top"><input type="checkbox" id="lock-our">🔒</span><span class="lk-name" id="lock-our-name">Blue</span></label>
           <button class="optbtn our" id="opt-our" data-act="optimize" data-side="our">Best Blue lineup</button>
           <button class="optbtn opp" id="opt-opp" data-act="optimize" data-side="opp">Best Red lineup</button>
-          <label class="lockchk opp" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><input type="checkbox" id="lock-opp"><span class="lk-txt">🔒 <span id="lock-opp-name">Red</span></span></label>
+          <label class="lockchk opp" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><span class="lk-top"><input type="checkbox" id="lock-opp">🔒</span><span class="lk-name" id="lock-opp-name">Red</span></label>
         </div>
         <div class="optbar-note" id="optnote"></div>
       </div>
