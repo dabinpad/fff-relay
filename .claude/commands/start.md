@@ -16,7 +16,7 @@ Orient this session on the **FFF Don't Hide Legend Cup relay app** (`index.html`
    1 trio per side).
 3. Note the invariants you must not silently undo (APP-DESIGN-SPEC §4/§8): pace as the single
    source of truth for times; no-show keeps the runner visible; the lock semantics;
-   result-first layout; **no header logo**; **no sticky bar**; the blank "— Start blank"
+   result-first layout; **no header logo**; the **slim sticky score bar**; the **"Start blank"**
    default.
 
 ## Then

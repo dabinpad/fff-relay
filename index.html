@@ -350,7 +350,7 @@
     <div class="controls">
       <!-- Auto-optimize: title line, then one row of lock · best-blue · best-red · lock -->
       <div class="optblock">
-        <div class="opt-head"><span class="tc-title">⚡ Auto-optimize</span><span class="help"><button type="button" class="help-btn" aria-label="About optimise and lock">?</button><span class="help-pop">Optimise loads a side's best lineup against the other's current one. Lock a team to pin its lineup — times stay editable, but runners can't be added or removed — so switching scenarios only changes the other team, letting you compare against each opponent combo.</span></span></div>
+        <div class="opt-head"><span class="tc-title">⚡ Auto-optimize</span><span class="help"><button type="button" class="help-btn" aria-label="About optimise and lock">?</button><span class="help-pop">Optimise loads a side's best lineup against the other's current one. If the board is empty, it instead seeds that side's Random (similar-pace) lineup so you have something to start from. Lock a team to pin its lineup — times stay editable, but runners can't be added or removed — so switching scenarios only changes the other team.</span></span></div>
         <div class="optrow">
           <label class="lockchk our" title="Pin this team's lineup: switching scenarios won't change it, its Optimise is disabled, and runners can't be added or removed (times stay editable)."><span class="lk-top"><input type="checkbox" id="lock-our">🔒</span><span class="lk-name" id="lock-our-name">Blue</span></label>
           <button class="optbtn our" id="opt-our" data-act="optimize" data-side="our">Best Blue lineup</button>
@@ -950,11 +950,17 @@ function* noShowAssignments(ids,k){
       for(const sub of noShowAssignments(rest,k-1)) yield {teams:[{ids:[ids[i],ids[j]],kind:'trio10k',leg1},...sub.teams],rest:sub.rest};
   }
 }
+// nothing on the board to optimise against → drop in this side's Random (similar-pace) lineup
+function fillRandom(side){
+  state[side].teams=lineupFromNames(side, side==='our'?LINEUPS.ourRandom:LINEUPS.redRandom);
+  el('optnote').textContent=`No other team yet — loaded ${side==='our'?'Blue':'Red'}'s Random lineup (grouped by similar pace). Add the other team to optimise.`;
+  renderLineup(side);renderResults();
+}
 function optimize(side){
   if(sideLocked(side)){el('optnote').textContent=`${side==='our'?state.our.name:state.opp.name} is locked — untick its lock by the scenario picker to optimise.`;return;}
   const other=side==='our'?'opp':'our';
   const oppTimes=fixedTimes(other);
-  if(oppTimes.length===0){el('optnote').textContent='Set the other team’s lineup first.';return;}
+  if(oppTimes.length===0){fillRandom(side);return;}   // empty board → seed a Random lineup instead of erroring
   const f=id=>{const r=runnerById(side,id);return r.actSec!=null?r.actSec:fiveK(paceToSec(r.pace)??99999);};  // actual-time-aware 5K
   const kOf=id=>2*f(id);  // 10K = 2×5K
   // locked teams are kept exactly as-is: their runners leave the pool and their (capped) times
