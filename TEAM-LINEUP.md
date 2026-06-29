@@ -31,9 +31,9 @@ may be added later** — these are estimates for the next cup.
 | GoG | 5:45 | AK | 6:45 | | |
 
 **Aggregate 5K** (sum of all 11): **Our 16,925 s vs Red 16,660 s** — Red's raw aggregate is
-**~265 s faster**. With no no-show penalty this year it's a close fight, but committing a
-single lineup (which is what really happens — we can't see Red first) leaves us a **slight
-underdog** to Red's strongest plays — see §2.
+**~265 s faster**. With no no-show penalty this year it's close on paper, but committing a
+single lineup (which is what really happens — we can't see Red first) leaves us the
+**underdog** once race-day variance is included — Red is favoured in most scenarios (§2).
 
 ---
 
@@ -57,17 +57,29 @@ Red is **~265 s faster on raw aggregate** (16,660 vs 16,925 s). With one committ
 > **Our robust lineup:** `(LW*+DB+Apoon)trio · TT+WL · Cai+9J · CM+CP · SLK+Penny`
 > (`*` = the runner on Leg 1 of the trio)
 
-It **loses by 2** to Red's two strongest plays (optimal & balanced, **37 : 39**) and **wins**
-the two weaker ones (stacks **39 : 37**, spread **40 : 36**). Worst case is a 2-point loss —
-better than any other single lineup. So: a genuine coin-flip-ish contest, tilted slightly to
-Red because of their aggregate-speed edge.
+On the **deterministic** board it **splits 2–2**: loses **26 : 29** to Red's two strongest
+plays (optimal & balanced) and wins **29 : 26** vs the two weaker ones (stacks, spread).
+Worst case is a 3-point loss — the best any single lineup can guarantee. *(Points are out of
+55 for 10 teams; 28+ wins — see [GAME-RULES §3](GAME-RULES.md#3-scoring).)*
 
-### Why it's still close (positional play)
-Our two fast pairs (`WL+TT`, etc.) grab top points and the **trio half-credit is our tool
-too** — we bury our three slowest into **one** trio so only that team sits at the bottom.
-Against Red's spread/stacked plays that's enough to win; against Red's optimal/balanced
-plays Red just out-places us by one slot. The **race-day win-chance** (±10 s/km jitter) for
-the toughest case reads ≈ **46 % us / 54 % Red** — consistent with a slight underdog.
+### Race-day reality: Red is the favourite
+Those deterministic wins are **knife-edge**. Because Red is faster on aggregate, even small
+race-day jitter (±10 s/km) tends to push Red's runners ahead — many teams finish within
+seconds of each other, so positions flip easily. The app's Monte-Carlo **win-chance** for the
+robust lineup:
+
+| Red plays | deterministic | race-day win-chance (Blue) |
+|---|---|---|
+| Optimal (toughest) | 26 : 29 (lose) | ~1 % |
+| Balanced | 26 : 29 (lose) | ~30 % |
+| Stacks both aces | 29 : 26 (win) | ~26 % |
+| Spreads its aces | 29 : 26 (win) | ~50 % |
+
+So **Red is the favourite overall.** Our two deterministic wins don't survive the variance —
+Blue is roughly a coin-flip only when Red spreads its aces, and an underdog otherwise. Our
+two fast pairs (`TT+WL`, etc.) grab top points and the **trio half-credit is our tool too**
+(bury the three slowest in one trio), but Red's speed edge wins the close positional battles.
+Our realistic path to winning is **Red mis-playing + a good day.**
 
 ### Lessons / how to tilt it our way
 - **Bury slows in ONE trio**, don't scatter them — one bottom team instead of several.
@@ -89,20 +101,20 @@ play** — so you can see how our one committed lineup holds up. The toughest is
 > **Our lineup (same in every scenario):**
 > `(LW*+DB+Apoon)trio · TT+WL · Cai+9J · CM+CP · SLK+Penny`
 
-| # | Scenario (Red's play) | Red lineup | Result |
+| # | Scenario (Red's play) | Red lineup | Result (points /55) |
 |---|---|---|---|
-| 1 | **Toughest — Red optimal** | `(KTY*+GoG+AK)` · LC+SIN · Sandro+FL · LP+LS · Oyster+5K | **37 : 39 — Red** |
-| 2 | **Red plays balanced** | LC+LP · SIN+LS · Sandro+Oyster · FL+5K · `(KTY*+GoG+AK)` | **37 : 39 — Red** |
-| 3 | **Red stacks both aces** | LC+SIN · Sandro+FL · KTY+LP · LS+Oyster · `(5K*+GoG+AK)` | **39 : 37 — Blue** |
-| 4 | **Red spreads its aces** | LC+GoG · SIN+5K · Sandro+Oyster · FL+LS · `(KTY*+LP+AK)` | **40 : 36 — Blue** |
+| 1 | **Toughest — Red optimal** | `(KTY*+GoG+AK)` · LC+SIN · Sandro+FL · LP+LS · Oyster+5K | **26 : 29 — Red** |
+| 2 | **Red plays balanced** | LC+LP · SIN+LS · Sandro+Oyster · FL+5K · `(KTY*+GoG+AK)` | **26 : 29 — Red** |
+| 3 | **Red stacks both aces** | LC+SIN · Sandro+FL · KTY+LP · LS+Oyster · `(5K*+GoG+AK)` | **29 : 26 — Blue** |
+| 4 | **Red spreads its aces** | LC+GoG · SIN+5K · Sandro+Oyster · FL+LS · `(KTY*+LP+AK)` | **29 : 26 — Blue** |
 
-So with the robust lineup we **split 2–2**: narrow 2-point losses to Red's two best plays,
-clear wins when Red mis-plays. That worst case (−2) is the best any single Blue lineup can
-guarantee across these four.
+So with the robust lineup we **split 2–2** on the deterministic board (worst case −3 — the
+best any single Blue lineup can guarantee). But those wins are knife-edge; on race-day
+win-chance Red is favoured in three of the four (§2).
 
 > **Caveat (deeper game theory):** if Red could *see* our committed lineup, its unconstrained
-> best response beats it ~41 : 35. But Red commits blind too, so the four named plays above
-> are the realistic set. There's no pure "solution" lineup — the full game needs mixed
+> best response beats it ~**24 : 31**. But Red commits blind too, so the four named plays
+> above are the realistic set. There's no pure "solution" lineup — the full game needs mixed
 > strategies (the per-side best-responses oscillate), which is out of scope for the app.
 
 ---
