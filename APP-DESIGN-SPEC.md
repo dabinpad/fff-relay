@@ -77,6 +77,10 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis).
   no-show) to maximise points **against the other side's current lineup**. It honours
   per-team locks (keeps locked teams fixed) and is a **no-op when that side is
   whole-team-locked**. Uses the effective 5K, so manually-entered actual times feed it.
+  **Empty-board fallback:** when the *other* side has no scoreable lineup (nothing to optimise
+  against), the button instead calls `fillRandom(side)` to seed that side's Random
+  (similar-pace) lineup — so from a blank board, clicking either "Best … lineup" puts something
+  on the finish board to start from.
 - **Win probability (`winProbBoard` / `simWin`):** seeded Monte-Carlo (mulberry32-style RNG
   so the % is stable, not flickering), 2000 races, each leg jittered with σ≈50 s
   (≈±10 s/km). Deferred via `setTimeout` with a token so fast edits stay snappy.
@@ -349,6 +353,11 @@ Choices that should *not* be silently undone.
     **both** teams group by similar pace — trio = a mid runner + the two slowest (Red
     `Oyster*+GoG+AK`, Blue `DB*+Penny+Apoon`); that naive matchup is **27 : 28 Red**. The
     construction was verified to reproduce the user's exact example trios.
+33. **Optimise buttons seed a Random lineup on an empty board.** Previously clicking "Best …
+    lineup" with nothing to optimise against just showed "Set the other team's lineup first".
+    Now it calls `fillRandom(side)` to drop in that side's Random (similar-pace) lineup — so a
+    blank board always gets *something* on the finish board. Normal optimisation is unchanged
+    whenever the opponent already has a lineup.
 
 ---
 
