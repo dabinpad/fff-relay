@@ -587,8 +587,8 @@ let winTok=0;
 /* =================== STATE =================== */
 let uid=0;
 const DEFAULTS={
-  our:{name:'Our team',runners:[['TT','4:00'],['LC','4:10'],['FL','4:10'],['LP','4:45'],['Ryan','4:45'],['LW','5:15'],['5K','5:15'],['KK','5:30'],['DB','5:30'],['SLK','5:45'],['Penny','5:45'],['CHT','6:00'],['FF','6:00']]},
-  opp:{name:'Opponent',runners:[['Sandro','4:00'],['WL','4:00'],['SIN','4:15'],['HT','4:30'],['CM','4:30'],['KTY','4:45'],['Cai','5:00'],['CP','5:00'],['Oyster','5:15'],['LS','5:15'],['9J','5:30'],['GoG','5:45'],['AK','6:30']]}
+  our:{name:'Our team',runners:[['TT','4:05'],['WL','4:15'],['Cai','4:30'],['CM','4:45'],['CP','4:50'],['9J','5:00'],['LW','5:45'],['DB','5:45'],['SLK','5:45'],['Penny','5:45'],['Apoon','6:00']]},
+  opp:{name:'Opponent',runners:[['LC','4:15'],['SIN','4:15'],['Sandro','4:15'],['FL','4:20'],['KTY','4:45'],['LP','5:12'],['LS','5:15'],['Oyster','5:20'],['5K','5:25'],['GoG','5:45'],['AK','6:45']]}
 };
 let state;
 
@@ -614,28 +614,27 @@ function lineupFromNames(side,groups){
   });
 }
 
+// 2026-2027 format: 11 v 11, no no-show. Each side = 4 pairs + 1 trio (5 small teams).
+// A 3-name group is the trio; lineupFromNames sets its fastest member on leg 1.
 const LINEUPS={
-  // ★ the announced final lineups (the actual matchup)
-  blueAnnounced:[['Ryan','LC'],['LP','FL'],['LW','TT'],['KK','DB'],['5K','Penny','CHT'],['SLK','FF']],
-  redAnnounced:[['WL','SIN'],['Cai','Sandro'],['CM','KTY'],['CP','HT'],['9J','LS'],['Oyster','GoG','AK']],
-  // Red archetypes (5 pairs + 1 trio)
-  oppOptimal:[['SIN','CM'],['Sandro','Oyster'],['WL','LS'],['KTY','9J'],['Cai','CP'],['HT','GoG','AK']],
-  oppBalanced:[['Sandro','SIN'],['WL','CM'],['KTY','9J'],['Cai','LS'],['CP','Oyster'],['HT','GoG','AK']],
-  oppSpreadAces:[['Sandro','HT'],['WL','KTY'],['SIN','CM'],['Cai','CP'],['Oyster','LS'],['9J','GoG','AK']],
-  oppStacked:[['Sandro','WL'],['SIN','CM'],['HT','KTY'],['Cai','CP'],['Oyster','LS'],['9J','GoG','AK']],
-  // Blue best responses to each (FF is the no-show; a 1-runner group is the capped 10K solo)
-  blueVsOptimal:[['LW','FF'],['KK','DB','SLK'],['TT','LP'],['LC','FL'],['Ryan','5K'],['Penny','CHT']],
-  blueVsBalanced:[['LW','FF'],['TT','KK','SLK'],['LC','Penny'],['FL','CHT'],['LP','5K'],['Ryan','DB']],
-  blueVsAces:[['LW','FF'],['TT','KK','CHT'],['LC','FL'],['LP','5K'],['Ryan','DB'],['SLK','Penny']],
-  blueVsStacked:[['LP','FF'],['KK','DB','CHT'],['TT','Ryan'],['LC','LW'],['FL','5K'],['SLK','Penny']]
+  // Red archetypes (4 pairs + 1 trio)
+  redBalanced: [['LC','LP'],['SIN','LS'],['Sandro','Oyster'],['FL','5K'],['KTY','GoG','AK']],
+  redSpread:   [['LC','GoG'],['SIN','5K'],['Sandro','Oyster'],['FL','LS'],['KTY','LP','AK']],
+  redStacked:  [['LC','SIN'],['Sandro','FL'],['KTY','LP'],['LS','Oyster'],['5K','GoG','AK']],
+  redOptimal:  [['LC','SIN'],['Sandro','FL'],['LP','LS'],['Oyster','5K'],['KTY','GoG','AK']],
+  // Our best response to each (solver-computed: 4 pairs + 1 trio)
+  ourVsBalanced:[['LW','DB','Apoon'],['TT','CM'],['WL','9J'],['Cai','CP'],['SLK','Penny']],
+  ourVsSpread:  [['LW','DB','Apoon'],['TT','CM'],['WL','CP'],['Cai','9J'],['SLK','Penny']],
+  ourVsStacked: [['Cai','LW','Apoon'],['TT','WL'],['CM','DB'],['CP','9J'],['SLK','Penny']],
+  ourVsOptimal: [['Cai','LW','Apoon'],['TT','WL'],['CM','DB'],['CP','SLK'],['9J','Penny']]
 };
-// FF is the no-show in every scenario; each loads Red's setup + Blue's best response.
+// Each scenario loads Red's setup + our best response (no no-show this year).
 const PRESETS=[
-  {label:'★ Announced final lineup (TT & SLK vs CM & SIN)',noshow:['FF'],our:'blueAnnounced',opp:'redAnnounced'},
-  {label:'Toughest — Red’s optimal spread (Blue best ≈ 31)',noshow:['FF'],our:'blueVsOptimal',opp:'oppOptimal'},
-  {label:'Red plays two big pairs — Blue’s best shot (35.5)',noshow:['FF'],our:'blueVsBalanced',opp:'oppBalanced'},
-  {label:'Red spreads its 3 aces (33)',noshow:['FF'],our:'blueVsAces',opp:'oppSpreadAces'},
-  {label:'Red stacks both aces in one pair (31.5)',noshow:['FF'],our:'blueVsStacked',opp:'oppStacked'}
+  {label:'— Start blank (everyone benched)'},
+  {label:'Red plays balanced — our best shot (41 : 35)',our:'ourVsBalanced',opp:'redBalanced'},
+  {label:'Red spreads its aces (41 : 35)',our:'ourVsSpread',opp:'redSpread'},
+  {label:'Red stacks both aces in one pair (39 : 37)',our:'ourVsStacked',opp:'redStacked'},
+  {label:'Toughest — Red’s optimal lineup (39.5 : 36.5)',our:'ourVsOptimal',opp:'redOptimal'}
 ];
 
 function sideLocked(side){const b=el(side==='our'?'lock-our':'lock-opp');return !!(b&&b.checked);}
@@ -645,10 +644,9 @@ function applyPreset(p){
   const keep={};
   ['our','opp'].forEach(s=>{if(sideLocked(s))keep[s]=state[s];});
   state=freshState();
-  (p.noshow||[]).forEach(n=>{const r=state.our.runners.find(x=>x.name===n);if(r)r.ns=true;});
-  state.our.teams=lineupFromNames('our',LINEUPS[p.our]);
-  state.opp.teams=lineupFromNames('opp',LINEUPS[p.opp]);
-  markNoShowTeams('our');markNoShowTeams('opp');   // flag teams that carry a no-show runner
+  // blank preset (no lineup names) leaves everyone benched; otherwise build the scenario's teams
+  if(p.our)state.our.teams=lineupFromNames('our',LINEUPS[p.our]);
+  if(p.opp)state.opp.teams=lineupFromNames('opp',LINEUPS[p.opp]);
   ['our','opp'].forEach(s=>{if(keep[s])state[s]=keep[s];});
   renderAll();
 }
