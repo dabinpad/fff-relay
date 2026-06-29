@@ -33,7 +33,7 @@
   .brand{display:flex;align-items:center;gap:14px}
   .brand .brandtext{display:flex;flex-direction:column;gap:2px;min-width:0}
   .brand h1{font-family:var(--disp);font-weight:800;font-size:24px;letter-spacing:.004em;margin:0;color:var(--brand);line-height:1.08}
-  .brand h1 .yr{color:var(--gray);font-weight:700}
+  .brand h1 .yr{color:var(--gray);font-weight:700;white-space:nowrap}   /* keep "2026-2027" together; it wraps as one unit, never splits at the hyphen */
   .brand .tag{color:var(--ink-2);font-size:12px;letter-spacing:.05em;text-transform:uppercase;font-weight:600}
   .scorestrip{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;margin:0 0 16px}
   .sc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:var(--shadow)}
