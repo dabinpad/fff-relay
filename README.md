@@ -13,7 +13,7 @@ a race-day Monte-Carlo win chance.
 | Doc | What it covers |
 |---|---|
 | **[GAME-RULES.md](GAME-RULES.md)** | The competition ruleset — format, timing formulas, scoring, penalties. The source of truth for how the meet works. |
-| **[TEAM-LINEUP.md](TEAM-LINEUP.md)** | Current rosters & paces, the strategic analysis, and the scenario lineups (our one robust lineup vs each Red play). |
+| **[TEAM-LINEUP.md](TEAM-LINEUP.md)** | Current rosters & paces, the strategic analysis, and the scenario lineups (a Random baseline + our best response to each Red play). |
 | **[APP-DESIGN-SPEC.md](APP-DESIGN-SPEC.md)** | How the app is built — architecture, features, design decisions, iteration log. **Read first for any code change.** |
 
 ## Current cup
