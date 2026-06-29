@@ -43,21 +43,28 @@ count is odd:**
 
 ## 3. Scoring
 
-All small teams are ranked by finishing time (fastest = 1st). Points by finishing position:
+All small teams are ranked by finishing time (fastest = 1st). **Points scale to the total
+number of small teams `N`** (blue + red — always **even**, since both sides field the same
+number of teams):
 
-| Place | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
-|:--|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| Points | 13 | 11 | 10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 0 |
+> **1st = `N + 1` · last = `0` · every position in between counts down by one.**
 
+**2026-2027 — 10 small teams:**
+
+| Place | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+|:--|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| Points | 11 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 0 |
+
+These **sum to 55** → a main team needs **more than 27.5 (i.e. 28+) to win**.
+
+- The scheme **generalises with the team count**: the previous 13-a-side cup had **12 teams**
+  → `13, 11, 10, … 2, 0` (sum 78, 40+ wins); a 7-a-side split → 14 teams → `15, 13, 12, …
+  2, 0`. The app derives the table from the live sub-team count, so it can't go stale.
 - Each main team's score = the sum of its small teams' points. **The higher total wins.**
-- **2026-2027 (10 teams):** only the first 10 positions are used (`13…3`), which **sum to
-  76** → a main team needs **more than 38 (i.e. 39+) to win**. *(The `2, 0` tail applies
-  only when there are 11–12 teams, as in the 13-a-side cup, where the points sum to 78 and
-  40+ wins.)*
 - **Tiebreak:** equal points → the main team with the **faster combined total time** (the
   sum of all its small-team times) wins. An exact time tie → **"dead tie"**.
 - **Ties on time** between small teams split the tied positions' points evenly → legitimate
-  **half-points** (two teams tied for 2nd share `(11 + 10) / 2 = 10.5` each).
+  **half-points** (two teams tied for 2nd share `(9 + 8) / 2 = 8.5` each).
 
 ---
 

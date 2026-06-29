@@ -246,6 +246,7 @@
   .ptable .pp{display:flex;flex-direction:column;align-items:center;gap:3px}
   .ptable .pp span{font-size:10px;color:var(--ink-2);font-weight:600}
   .ptable .pp input{width:46px;text-align:center;padding:6px 4px;border:1px solid var(--line);border-radius:8px;font-family:var(--mono);font-weight:600}
+  .ptable .pp .pv{display:inline-block;min-width:46px;text-align:center;padding:6px 4px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:var(--mono);font-weight:700;color:var(--ink)}
   .legend{font-size:12px;color:var(--ink-2);line-height:1.6;margin-top:6px}
   .legend code{background:var(--surface-2);padding:1px 6px;border-radius:5px;font-family:var(--mono);font-size:11.5px}
 
@@ -373,6 +374,7 @@
       <div class="adv-body">
         <div class="ptable" id="ptable"></div>
         <div class="legend">
+          <strong>Points</strong> — awarded by finishing position among all <em>N</em> sub-teams (blue + red): <b>1st = N+1</b>, <b>last = 0</b>, everyone in between counts down by one. The table above scales to the current number of teams (e.g. 10 teams → 11, 9, 8, … 2, 0). Higher total wins; a tie on points → faster combined time.<br>
           <strong>Trio</strong> = leg-1 runner (full) + average of the two leg-2 runners → <code>t_leg1 + (a+b)/2</code>. Fastest-on-leg-1 is set by default.<br>
           <strong>No-show (NS)</strong> — tick <b>NS</b> next to a runner in section&nbsp;1 to mark them absent. They stay on their team as a marker and that team automatically becomes a capped no-show team (<code>−5</code>, <strong>max 6 pts</strong>); a present teammate runs the full 10 km. <b>Optimise</b> still finds the lowest-cost sacrifice (solo <code>2×5K</code>, or a 10K-trio that buries a slow teammate).<br>
           <strong>Smart time entry</strong> — type digits and press Enter: <code>415</code>→4:15, <code>2115</code>→21:15, <code>4</code>→4:00. In section&nbsp;1 you can enter either the <em>pace</em> (5K fills in) or the <em>5K</em> (pace fills in).<br>
@@ -524,8 +526,14 @@ function editMemberLeg(side,id,str){
   renderRoster(side);renderLineup(side);renderResults();
 }
 
+// Points by finishing position, DERIVED from the number of sub-teams K (blue+red, always even
+// since both sides field the same count). 1st = K+1, last = 0, the middle = K − position.
+// Reproduces [13,11,10,…,2,0] at K=12 and [11,9,8,…,2,0] at K=10 — no fixed table to get stale.
+function pointsFor(k){const a=[];for(let i=0;i<k;i++)a.push(i===0?k+1:(i===k-1?0:k-i));return a;}
+// teams actually on the board; when blank, the count a full lineup would make (one trio if odd)
+function boardTeamCount(){const n=state.our.teams.length+state.opp.teams.length;return n>0?n:Math.floor(state.our.runners.length/2)+Math.floor(state.opp.runners.length/2);}
+
 function computeResults(state){
-  const pts=state.points;
   const rows=[];
   for(const side of ['our','opp']){
     for(const st of state[side].teams){
@@ -536,6 +544,7 @@ function computeResults(state){
     }
   }
   rows.sort((a,b)=>a.t-b.t);
+  const pts=pointsFor(rows.length);          // points scale to however many sub-teams are ranked
   let i=0;
   while(i<rows.length){
     let j=i;while(j<rows.length&&rows[j].t===rows[i].t)j++;
@@ -577,6 +586,7 @@ function simWin(blue,red,N){          // Blue win fraction over N noisy races
   const rnd=()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
   const g=()=>{let u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
   const teams=blue.map(t=>({side:'our',...t})).concat(red.map(t=>({side:'opp',...t})));
+  const pts=pointsFor(teams.length);
   let ourW=0,oppW=0;
   for(let s=0;s<N;s++){
     const arr=teams.map(tm=>tm.dnf?{t:Infinity,side:tm.side,dnf:true,capped:false}
@@ -584,7 +594,7 @@ function simWin(blue,red,N){          // Blue win fraction over N noisy races
     arr.sort((x,y)=>x.t-y.t);
     let op=0,pp=0,ot=0,pt=0;
     for(let i=0;i<arr.length;i++){
-      const raw=state.points[i]||0;
+      const raw=pts[i]||0;
       const c=arr[i].dnf?-5:(arr[i].capped?Math.min(raw,6)-5:raw);
       if(arr[i].side==='our'){op+=c;if(isFinite(arr[i].t))ot+=arr[i].t;}else{pp+=c;if(isFinite(arr[i].t))pt+=arr[i].t;}
     }
@@ -606,7 +616,7 @@ let state;
 function freshState(){
   uid=0;
   const mk=side=>({name:DEFAULTS[side].name,runners:DEFAULTS[side].runners.map(([n,p])=>({id:++uid,name:n,pace:p,actSec:null,ns:false})),teams:[]});
-  return {our:mk('our'),opp:mk('opp'),points:[13,11,10,9,8,7,6,5,4,3,2,0]};
+  return {our:mk('our'),opp:mk('opp')};
 }
 // effective 5K = an actual-time override (r.actSec, exact seconds) when present, else pace×5.
 // We expose it through `p` (effective pace = 5K/5) so every fiveK(p) call stays exact.
@@ -640,10 +650,10 @@ const LINEUPS={
 // Every scenario fields the SAME robust Blue lineup vs a different Red play (no no-show this year).
 const PRESETS=[
   {label:'Start blank'},
-  {label:'Toughest — Red’s optimal (37 : 39)',our:'ourRobust',opp:'redOptimal'},
-  {label:'Red plays balanced (37 : 39)',our:'ourRobust',opp:'redBalanced'},
-  {label:'Red stacks both aces (39 : 37)',our:'ourRobust',opp:'redStacked'},
-  {label:'Red spreads its aces (40 : 36)',our:'ourRobust',opp:'redSpread'}
+  {label:'Toughest — Red’s optimal (26 : 29)',our:'ourRobust',opp:'redOptimal'},
+  {label:'Red plays balanced (26 : 29)',our:'ourRobust',opp:'redBalanced'},
+  {label:'Red stacks both aces (29 : 26)',our:'ourRobust',opp:'redStacked'},
+  {label:'Red spreads its aces (29 : 26)',our:'ourRobust',opp:'redSpread'}
 ];
 
 function sideLocked(side){const b=el(side==='our'?'lock-our':'lock-opp');return !!(b&&b.checked);}
@@ -781,8 +791,9 @@ function renderLineup(side){
 }
 
 function renderPoints(){
-  el('ptable').innerHTML=state.points.map((v,i)=>`
-    <div class="pp"><span>${i+1}${ord(i+1)}</span><input type="number" value="${v}" data-act="point" data-idx="${i}"></div>`).join('');
+  // derived from the sub-team count (read-only) — points auto-scale if the rosters change
+  el('ptable').innerHTML=pointsFor(boardTeamCount()).map((v,i)=>`
+    <div class="pp"><span>${i+1}${ord(i+1)}</span><b class="pv">${v}</b></div>`).join('');
 }
 
 function scorecardRows(side){   // blank template: teams in lineup order, no rank/time/points
@@ -907,10 +918,11 @@ function fixedTimes(side){          // current times of the OTHER side
 // my total points vs fixed opp times, applying the cap+(−5) to any of my teams flagged capped
 function scoreCapped(myTeams,oppTimes){
   const rows=[...myTeams.map(x=>({t:x.t,s:'m',capped:x.capped})),...oppTimes.map(t=>({t,s:'o',capped:false}))].sort((a,b)=>a.t-b.t);
+  const pts=pointsFor(rows.length);
   let i=0,mp=0;
   while(i<rows.length){
     let j=i;while(j<rows.length&&rows[j].t===rows[i].t)j++;
-    let avg=0;for(let k=i;k<j;k++)avg+=(state.points[k]||0);avg/=(j-i);
+    let avg=0;for(let k=i;k<j;k++)avg+=(pts[k]||0);avg/=(j-i);
     for(let k=i;k<j;k++){if(rows[k].s==='m')mp+=rows[k].capped?(Math.min(avg,6)-5):avg;}
     i=j;
   }
@@ -1005,7 +1017,6 @@ document.addEventListener('input',e=>{
     renderLineup('our');renderLineup('opp');renderResults();return;
   }
   if(t.classList.contains('tname')){state[t.dataset.side].name=t.value;renderLineup(t.dataset.side);renderResults();return;}
-  if(t.dataset.act==='point'){const i=+t.dataset.idx;const v=parseFloat(t.value);state.points[i]=isNaN(v)?0:v;renderLineup('our');renderLineup('opp');renderResults();return;}
 });
 
 document.addEventListener('change',e=>{

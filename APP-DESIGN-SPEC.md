@@ -61,11 +61,17 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis-one-committed-
   no no-show, so `applyPreset` no longer calls `markNoShowTeams`; that helper is currently
   uncalled and retained only in case presets carry no-shows again.)*
 - **Scoring engine (vanilla JS):** `teamTime()` computes pair/trio/solo/10k-trio times;
-  `computeResults()` ranks **all small teams** (10 this year), applies the points table,
+  `computeResults()` ranks **all small teams** (10 this year), applies the points scheme,
   splits ties (half-points), applies the no-show cap+penalty, and resolves the winner
   (points, then aggregate time, then "dead tie"). When **every** runner's effective 5K is 0
   (`isBlankRecord`, after *Clear record*), the board renders a **blank scorecard** instead
   of ranking.
+- **Points are derived, not stored.** `pointsFor(K)` returns the table for `K` sub-teams
+  (`1st = K+1`, `last = 0`, middle = `K − position`); 10 teams → `11,9,8,…,2,0` (sum 55,
+  28+ wins), 12 → `13,11,10,…,2,0`. `computeResults` / `simWin` / `scoreCapped` each call it
+  with their own team count, so the scheme **auto-scales** if the rosters change. The points
+  table in the rules drawer (`renderPoints`) shows the derived values **read-only** (the old
+  per-cell editing was removed). *(`state.points` no longer exists.)*
 - **Optimizer (`optimize(side)`):** brute-forces the side's partitions (pairs + trio, plus
   the forced no-show team when one exists — trying **both** solo and 10K-trio for each
   no-show) to maximise points **against the other side's current lineup**. It honours
@@ -331,6 +337,12 @@ Choices that should *not* be silently undone.
     robust lineup **splits 2–2** (loses 37:39 to Red optimal/balanced, wins 39:37 / 40:36 vs
     stacked / spread) — no single lineup sweeps all four. See
     [TEAM-LINEUP §2–3](TEAM-LINEUP.md#2-strategic-analysis-one-committed-lineup-a-close-fight).
+31. **Points-table bug fix → derived scoring.** The points were a fixed 12-slot array
+    (`[13,11,…,0]`), wrong for a 10-team meet. Replaced with **`pointsFor(K)`** derived from
+    the live sub-team count (1st = K+1, last = 0, middle = K−i); the rules-drawer table is now
+    read-only. Win threshold for 10 teams is **28+ (sum 55)**. Re-ran `solve_robust.py` under
+    the corrected points: same robust lineup, scores now **26:29 / 26:29 / 29:26 / 29:26**, and
+    the race-day win-chance shows **Red favoured in 3 of 4** scenarios.
 
 ---
 
@@ -342,8 +354,8 @@ Choices that should *not* be silently undone.
   (`--no-sandbox`). Used for behavioural tests (lock guards, master-lock state, editable-time
   math, optimiser) **and** rendered screenshots (desktop + mobile). A **Python brute-force
   model** (using `fractions`) cross-checks the scoring numbers — the 2026-2027 presets were
-  verified live in-browser to match the solver exactly (the robust lineup scores 37:39, 37:39,
-  39:37, 40:36 vs Red optimal / balanced / stacked / spread). An
+  verified live in-browser to match the solver exactly (the robust lineup scores 26:29, 26:29,
+  29:26, 29:26 vs Red optimal / balanced / stacked / spread, out of 55). An
   **adversarial multi-agent diff review** (4 lenses + verification) was run before finalising
   the lock/UI overhaul and caught 5 real defects (all fixed).
 - **iOS gotcha:** Safari/Chrome on iPhone can't open local files directly; use the hosted
@@ -382,7 +394,7 @@ Choices that should *not* be silently undone.
   loaded, everyone benched, board empty — you build from scratch). Pick a scenario to field
   our **one robust Blue lineup** against a Red play.
 - **Current cup = 2026-2027, 11 v 11, nil no-show.** Each side = 4 pairs + 1 trio (10 small
-  teams; first 10 point slots `13…3` sum to 76 → 39+ wins). Team names "Our team" /
+  teams; points derived from the team count → `11,9,8,…,2,0`, sum 55 → 28+ wins). Team names "Our team" /
   "Opponent". Rules in [GAME-RULES](GAME-RULES.md); rosters + strategy in
   [TEAM-LINEUP](TEAM-LINEUP.md).
 - **Don't undo:** whole-second time rounding; intentional half-points; faster-runner-on-leg-2;
