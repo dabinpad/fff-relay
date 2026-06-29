@@ -18,7 +18,7 @@
 A standalone tool to **build relay lineups for two teams, rank all the small teams by finish time,
 score the meet, and instantly see who wins** — with:
 - a **brute-force optimizer** for each side's best response to the other's current setup,
-- **no-show / penalty modelling** (the live constraint for this cup — see §2/§4),
+- **no-show / penalty modelling** (dormant for the 2026-2027 cup — nil no-show — but kept for general use; see §2),
 - **editable actual race times** (type the real splits on the day; paces back-solve),
 - **per-team and whole-team locks** for comparing one fixed lineup against many opponent setups,
 - a **race-day Monte-Carlo win probability**, and
@@ -31,13 +31,18 @@ It exists to answer a strategic question (§4) interactively and to drive the li
 ## 2. The competition (domain rules — the source of truth)
 
 Two main teams each split their runners into **small teams** that each run **2 × 5 km legs (10 km total)**.
-For this cup both sides have **13 runners**, but **Blue (Our Team) has one no-show (FF)** → Blue effectively
-fields **12** and must take the no-show penalty, while **Red fields 13**:
 
-- **Our Team (Blue):** 13 listed, **FF is a no-show** → 12 active → **4 pairs + 1 trio + 1 capped no-show team**.
-- **Opponent (Red):** 13 runners → **5 pairs + 1 trio**.
+**2026-2027 format: 11 v 11, no no-show.** Each side splits its **11 runners** into **4 pairs + 1 trio**
+(= **5 small teams** per side):
 
-Total on the course: **12 small teams** (6 per side).
+- **Our Team (Blue):** 11 runners → **4 pairs + 1 trio**.
+- **Opponent (Red):** 11 runners → **4 pairs + 1 trio**.
+
+Total on the course: **10 small teams** (5 per side). **Assume nil no-show this year** — the no-show / cap
+machinery still exists in the app (see §5) but **no scenario uses it**.
+
+> Previous cup (archived in §8) was **13 v 13 with one Blue no-show (FF)** → 12 small teams. The engine is
+> format-agnostic (it ranks whatever teams exist), so only the rosters and presets changed.
 
 ### Timing
 - **Pair time** = sum of the two runners' 5K times. *Order-independent for scoring.*
@@ -49,14 +54,15 @@ Total on the course: **12 small teams** (6 per side).
   `1.5·5K_runner + 0.5·5K_partner` — i.e. it "buries" the partner at half credit.
 
 ### Scoring
-- All **12 small teams are ranked by time**; points by finishing position:
-  **`[13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 0]`** (sums to 78).
-- A main team needs **40+ points to win**.
+- All small teams are **ranked by time**; points by finishing position from the array
+  **`[13, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 0]`**. With **10 teams** this year only the first 10 slots are
+  used (`13…3`), which **sum to 76** → a main team needs **39+ (more than 38) to win**.
+  *(The 2,0 tail is harmless padding kept for robustness; the 13-v-13 cup used all 12 slots, summing to 78.)*
 - **Tie on points → faster combined (aggregate) time wins.** Exact time tie → "Dead tie".
 - **Ties on time** between small teams split the tied positions' points evenly → legitimate **half-points**
   (two teams tied for 2nd share `(11+10)/2 = 10.5`). Half-points are correct and intentional.
 
-### No-show / DNF penalties (modelled in the app)
+### No-show / DNF penalties (modelled in the app — **dormant in 2026-2027**, nil no-show assumed)
 - **No-show (1 runner absent):** that small team's points are **capped at a maximum of 6** *and* take **−5**.
   The present teammate runs the full 10 km:
   - **Solo** — one present runner runs the 10 km alone (`2×5K`), or
@@ -69,82 +75,90 @@ Total on the course: **12 small teams** (6 per side).
 
 ## 3. Rosters & paces (the actual data, seeded into the app)
 
-Pace is **min:sec per km**; 5K time = pace × 5. Stored in `DEFAULTS` (index.html).
+Pace is **min:sec per km**; 5K time = pace × 5. Stored in `DEFAULTS` (index.html). Team names are the
+generic **"Our team"** (Blue) / **"Opponent"** (Red) this year. **More TMs may be added later** — these are
+estimates for the next cup.
 
-**Our Team — `"TT & SLK team"` (Blue), 13 listed; FF is the no-show:**
-
-| Runner | Pace | Runner | Pace | Runner | Pace |
-|---|---|---|---|---|---|
-| TT | 4:00 | LC | 4:10 | FL | 4:10 |
-| LP | 4:45 | Ryan | 4:45 | LW | 5:15 |
-| 5K | 5:15 | KK | 5:30 | DB | 5:30 |
-| SLK | 5:45 | Penny | 5:45 | CHT | 6:00 |
-| **FF** | **6:00 (no-show)** | | | | |
-
-**Opponent — `"CM & SIN team"` (Red), 13 runners:**
+**Our team (Blue) — 11 runners:**
 
 | Runner | Pace | Runner | Pace | Runner | Pace |
 |---|---|---|---|---|---|
-| Sandro | 4:00 | WL | 4:00 | SIN | 4:15 |
-| HT | 4:30 | CM | 4:30 | KTY | 4:45 |
-| Cai | 5:00 | CP | 5:00 | Oyster | 5:15 |
-| LS | 5:15 | 9J | 5:30 | GoG | 5:45 |
-| AK | 6:30 | | | | |
+| TT | 4:05 | WL | 4:15 | Cai | 4:30 |
+| CM | 4:45 | CP | 4:50 | 9J | 5:00 |
+| LW | 5:45 | DB | 5:45 | SLK | 5:45 |
+| Penny | 5:45 | Apoon | 6:00 | | |
 
-> Renamed from earlier drafts: **LWL → WL**, **CL → Cai**. SLK is **5:45** (was 5:30). FF (6:00) is the
-> 13th Blue runner and the modelled no-show.
+**Opponent (Red) — 11 runners:**
 
-The **announced final lineup** (default scenario) resolves to **Blue 30.5 : 42.5 Red** —
-combined times **Blue 5:03:33 vs Red 4:50:38**.
+| Runner | Pace | Runner | Pace | Runner | Pace |
+|---|---|---|---|---|---|
+| LC | 4:15 | SIN | 4:15 | Sandro | 4:15 |
+| FL | 4:20 | KTY | 4:45 | LP | 5:12 |
+| LS | 5:15 | Oyster | 5:20 | 5K | 5:25 |
+| GoG | 5:45 | AK | 6:45 | | |
+
+> Aggregate 5K (sum of all 11): **Our 16,925 s vs Red 16,660 s** — Red's raw aggregate is **~265 s faster**.
+> Despite that, our best response **wins every modelled Red lineup** this year (no no-show penalty to
+> overcome — see §4).
+
+The **default scenario is blank** (everyone benched, dropdown reads "— Start blank"); the four loaded
+scenarios are our solver-optimal response to each Red archetype (§6).
 
 ---
 
 ## 4. The strategic analysis (the "why" behind everything)
 
-The substance the app was built to explore. Verified with an independent Python model during the session.
+The substance the app was built to explore. For 2026-2027 re-verified with an independent Python brute-force
+model (`solve2026.py` — enumerates all of our 4-pairs+1-trio partitions, C(11,3)×105 = **17,325**, for each
+Red lineup; plus a minimax loop for Red's toughest play).
 
-### The core finding
-**Red has a structural advantage.** The trio half-credit lets Red "bury" its two slowest runners
-(AK + GoG), so Red's effective aggregate ≈ **4:50:38** vs Blue's ≈ **5:03:33** — and because scoring is
-near-linear in aggregate time, the faster-aggregate team is structurally favored.
+### The core finding — it's a winnable fight this year
+Red is still **slightly faster on raw aggregate** (Red 16,660 s vs our 16,925 s, ≈265 s). But **there is no
+no-show penalty this year**, so we no longer spot Red a capped −5 team. With both sides at full strength our
+**best response beats every realistic Red lineup**:
 
-### The on-the-day reality: the FF no-show makes it worse
-Blue is down a runner. One Blue small team **must** be a capped no-show team (solo or 10K-trio): it earns
-**at most 6 points and then loses 5** — a swing of roughly a full team's worth of points handed to Red.
-With FF out:
-- **Blue cannot win the announced matchup.** The default scenario lands **30.5–42.5**.
-- The least-bad sacrifice is to burn a **slow** runner (SLK as the capped solo), **not** a fast one (TT),
-  so the fast runners stay in scoring pairs. The cap is decisive either way; sacrificing SLK loses ~4
-  fewer points than wasting TT.
-- Across Red's archetypes Blue's ceiling is roughly **31–35.5** — still a loss. Blue only closes the gap
-  if Red badly over-concentrates its speed.
+| Red plays | Our best response | Result |
+|---|---|---|
+| **balanced** (aces split, slows buried in trio) | trio `LW*+DB+Apoon` · TT+CM · WL+9J · Cai+CP · SLK+Penny | **41 : 35 (WIN)** |
+| **spread aces** | trio `LW*+DB+Apoon` · TT+CM · WL+CP · Cai+9J · SLK+Penny | **41 : 35 (WIN)** |
+| **stacks both aces** in one pair | trio `Cai*+LW+Apoon` · TT+WL · CM+DB · CP+9J · SLK+Penny | **39 : 37 (WIN)** |
+| **optimal** (minimax-toughest) | trio `Cai*+LW+Apoon` · TT+WL · CM+DB · CP+SLK · 9J+Penny | **39.5 : 36.5 (WIN)** |
 
-### The decisive predictor (unchanged from the no-no-show analysis)
-Outcome hinges on **how many Red teams finish under ~47:00**. Red fielding only 2 fast teams is the one
-archetype Blue can stay close to; 3+ fast teams and Blue is comfortably beaten. The user expects Red to
-play a **spread** (the "Red's optimal spread" preset is the toughest case and the app's #2 scenario).
+(`*` = the runner placed on leg 1 of the trio.) Even Red's **minimax-optimal** lineup — the toughest play we
+could find by iterating Red's best response against ours — only narrows it to **39.5 : 36.5**: still our win.
 
-### Recurring lessons surfaced to the user
-- **Don't stack slow-on-slow** — it creates multiple bottom "sacrifice" teams.
-- **Spread the fast runners** across teams.
-- A sacrifice team **must still finish ahead of the opponent's slowest team**, so it doesn't gift a position.
-- **Sacrifice the slow walker, not an ace**, for the forced no-show team.
+### Why we win despite the slower aggregate
+The win is **positional, not raw-speed**. Our two fast teams (e.g. `WL+TT` ≈ 41:40) take the top points,
+and the **trio half-credit is our tool too**: we bury our three slowest (LW/DB/SLK/Penny/Apoon class) into
+**one** trio so only that single team sits at the bottom, keeping the middle pairs competitive. Red's faster
+total is spread such that they don't out-place us where it counts.
 
-### Monte-Carlo sanity (now built into the app)
-With per-leg race-day jitter (±10 s/km), the announced Blue lineup wins essentially **0%** of races vs the
-current Red lineup — the cap + the aggregate gap are too large to overcome on luck.
+### The Monte-Carlo caveat (race-day variance is real)
+On the **deterministic** board our best response wins every archetype. But the **race-day win-chance**
+(±10 s/km jitter, §5) for the toughest case reads roughly **46% us / 54% Red** — because the point margin is
+thin and Red's faster aggregate means small jitters can flip the close positional battles. **Read both
+numbers:** we're favored on the expected-points board, but it's close enough that execution on the day
+matters. This is the honest picture — not the lopsided structural loss of last year.
 
-> These scenarios are baked into the app's **scenario presets** (§6), so the analysis is explorable.
+### Recurring lessons (carried over, still true)
+- **Bury slows in ONE trio**, don't scatter them — one bottom team instead of several.
+- **Spread your fast runners** so they take separate top positions rather than over-stacking one pair.
+- **Put the fastest on leg 1 of the trio** (minimizes its time → it doesn't sink further than it must).
+- Keep every middle pair **ahead of a Red team** — positions, not raw speed, decide it.
+
+> These scenarios are baked into the app's **scenario presets** (§6), so the analysis is explorable. The
+> default is **blank** so you build from scratch; pick a scenario to load a Red archetype + our best answer.
 
 ---
 
 ## 5. App architecture (how it works under the hood)
 
 - **One file, zero dependencies.** No external scripts/fonts/CDN. Native Apple system fonts. The cup logo
-  (an interlocking "4-F" emblem) is embedded once as a **base64 PNG** in the header `<img class="logo">`;
-  the **sticky bar** reuses the same bitmap by copying `src` at init (no second copy in the source). The page
-  header doubles as the branding above the result (centered on mobile), so a screencap is self-contained —
-  the earlier separate "result header" was removed as a duplicate.
+  (an interlocking "4-F" emblem) is embedded once as a **base64 PNG** in the header `<img class="logo">`.
+  The page header (logo + **"FFF Don't Hide Legend Cup 2026-2027"**, **left-aligned** — the year wraps under
+  "FFF" on narrow phones) doubles as the branding above the result, so a top-down screencap is
+  self-contained. *(The earlier separate "result header" and the scroll **sticky score bar** were both
+  removed — see §7/§8.)*
 - **Single source of truth for speed = the effective 5K.** Each runner has a `pace` (mm:ss/km) and an
   optional exact override `actSec` (a 5K time in seconds). `resolve()` exposes an *effective pace*
   `p = actSec/5` when an override is set, else `paceToSec(pace)`, so every `fiveK(p)` stays exact. Editing a
@@ -154,10 +168,11 @@ current Red lineup — the cap + the aggregate gap are too large to overcome on 
   member has `ns:true`**. `teamTime()`/`teamLegs()` score it from the **present** runners only — the absent
   (ns) members are non-running *markers* that keep the no-show runner visible on the team. 1 present → solo
   (`2×5K`); ≥2 present → leg-1 runs 10 km + the rest buried (`1.5·r + 0.5·others`). Marking NS keeps the
-  runner on a no-show team (`ensureNoShowTeam`), so the cap+penalty apply immediately; presets call
-  `markNoShowTeams`, and the optimiser re-attaches the ns runner to its capped team as a marker.
+  runner on a no-show team (`ensureNoShowTeam`), so the cap+penalty apply immediately; the optimiser
+  re-attaches the ns runner to its capped team as a marker. *(2026-2027 presets carry no no-show, so
+  `applyPreset` no longer calls `markNoShowTeams` — that path is exercised only by manual NS toggling.)*
 - **Scoring engine (vanilla JS):** `teamTime()` computes pair/trio/solo/10k-trio times; `computeResults()`
-  ranks all 12 teams, applies the points table, splits ties (half-points), applies the no-show cap+penalty,
+  ranks **all small teams** (10 this year), applies the points table, splits ties (half-points), applies the no-show cap+penalty,
   and resolves the winner (points, then aggregate time, then "Dead tie"). When **every** runner's effective
   5K is 0 (`isBlankRecord`, after *Clear record*), the board renders a **blank scorecard** instead of ranking.
 - **Optimizer (`optimize(side)`):** brute-forces the side's partitions (pairs + trio + the forced no-show
@@ -200,30 +215,31 @@ current Red lineup — the cap + the aggregate gap are too large to overcome on 
     rewrites the *other* team, its Optimise button is disabled, every small-team lock is auto-checked, and
     its composition is frozen (add/remove/clear hidden; NS/delete of a locked-in runner blocked). Restores
     individual locks when released. **This is the "compare my lineup vs each opponent combo" tool.**
-- **Live finish board:** all 12 teams ranked, with position, colored medal, time, trio/no-show/DNF flag, and
+- **Live finish board:** all small teams ranked (10 this year), with position, colored medal, time, trio/no-show/DNF flag, and
   net points (no-show rows show their net −x, not the capped raw). When the record is blank (after *Clear
   record*) it becomes a **scorecard** — teams in lineup order with dashes for rank/time/points and no winner.
 - **Top scoreboard:** big points per team + "combined H:MM:SS" subline + a verdict pill.
 - **Race-day win-chance row** *below the finish board* (colour-coded pills; hidden when blank/no matchup) — so
   it's outside a clean result screencap.
-- **Result screencap** = the centered page header (logo + "FFF Don't Hide Legend Cup 2026") → scoreboard →
-  finish board, all stacked at the top. The controls sit **below** the board so they're out of frame.
-- **Sticky score bar** on scroll: logo + single-line game title (centre), each team's name beside its score
-  (blue left / red right).
-- **Clear record** (by the scenario picker) — after a confirm, zeroes every pace/5K (keeps the lineups) to
+- **Result screencap** = the **left-aligned** page header (logo + "FFF Don't Hide Legend Cup **2026-2027**") →
+  scoreboard → finish board, all stacked at the top. The controls sit **below** the board so they're out of frame.
+  *(There is no longer a scroll sticky score bar — removed this cup.)*
+- **Clear record** (in the controls card) — after a confirm, zeroes every pace/5K (keeps the lineups) to
   enter the real race times; the board falls back to the blank scorecard. Pick a scenario to restore defaults.
 - **Scenario presets (dropdown):**
-  1. **★ Announced final lineup (TT & SLK vs CM & SIN)** ← **default**, FF no-show → 30.5–42.5
-  2. *Toughest — Red's optimal spread (Blue best ≈ 31)*
-  3. *Red plays two big pairs — Blue's best shot (35.5)*
-  4. *Red spreads its 3 aces (33)*
-  5. *Red stacks both aces in one pair (31.5)*
+  1. **— Start blank (everyone benched)** ← **default**: rosters loaded but **no teams**, board empty,
+     you build from scratch.
+  2. *Red plays balanced — our best shot (41 : 35)*
+  3. *Red spreads its aces (41 : 35)*
+  4. *Red stacks both aces in one pair (39 : 37)*
+  5. *Toughest — Red's optimal lineup (39.5 : 36.5)*
 
-  Every preset bakes in **FF as the no-show** (FF rides the no-show team, e.g. `SLK + FF`); presets 2–5 load
-  Red's archetype + Blue's best response.
-- **Controls live below the finish board:** the scenario picker + **Clear record**, then the **Auto-optimize**
-  panel (two best-lineup buttons + the two whole-team locks), laid out **blue-left / red-right** to mirror the
-  scoreboard. Concise **"?" help popovers** replace the old inline hints (scenario, optimise/lock, §1, §2).
+  Presets 2–5 each load **Red's archetype + our solver-optimal response** (§4). **Nil no-show this year**, so
+  no preset marks an absent runner.
+- **One compact controls card** (below the finish board, above the rules) wraps **both** the scenario row
+  (picker + **Clear record**) **and** the **Auto-optimize** panel (two best-lineup buttons + the two
+  whole-team locks), separated by a hairline — laid out **blue-left / red-right** to mirror the scoreboard.
+  Concise **"?" help popovers** replace the old inline hints (scenario, optimise/lock, §1, §2).
 
 ---
 
@@ -263,16 +279,20 @@ Choices that should *not* be silently undone.
   ("RACE-DAY WIN CHANCE · x% vs y%") below the scoreboard. Keep it out of the big-number cards.
 
 ### Shareable result (layout)
-- The **result comes first**: page header (logo + title, centered on mobile) → scoreboard → finish board.
-  The **controls block moved below the board**, and the once-separate "result header" was **removed** as a
-  duplicate — the page header now does that job, so a top-down screencap is the shareable result.
+- The **result comes first**: page header (logo + title, **left-aligned** — the "2026-2027" year wraps under
+  "FFF" on narrow phones) → scoreboard → finish board. The **controls block sits below the board**, and the
+  once-separate "result header" was **removed** as a duplicate — the page header now does that job, so a
+  top-down screencap is the shareable result.
 - The **win-chance row sits below the board** so it's outside that screencap.
 
-### Controls & sticky bar layout
-- Lock + Optimise controls are laid out **blue-left / red-right** to match the scoreboard's two cards.
-- The sticky bar shows the **logo + bigger game title** (centre) and each **team name beside its score**
-  (verdict text dropped — the scores make it obvious). Names use `stickyName()` to strip a trailing "team".
+### Controls layout (one card) & the removed sticky bar
+- The scenario row **and** the Lock/Optimise grid live in **one compact `.controls` card** (light purple
+  gradient, hairline divider between the two halves) — the user asked for "a single session". Lock + Optimise
+  are laid out **blue-left / red-right** to match the scoreboard's two cards.
 - Team-lock chips read **"🔒 Lock Blue" / "🔒 Lock Red"** (short, not the full team name).
+- **The scroll sticky score bar was removed** at the user's request ("I don't need the hanging effect now").
+  All `.stickybar`/`.sb*` markup + CSS, the `renderResults` sb-update block, the `sb-logo` init copy, the
+  IntersectionObserver, and `stickyName()` were deleted. **Don't reintroduce it** without being asked.
 
 ### Leg ordering within a pair (realism)
 - Slower runner leads off leg 1, faster runner runs leg 2 ("does the chasing") — cosmetic only (pair time is
@@ -292,8 +312,11 @@ Choices that should *not* be silently undone.
   identifiable.
 
 ### Mobile-specific (iOS is primary)
+- **Header is left-aligned** on phone (`.brand{justify-content:flex-start;text-align:left}`); the "2026-2027"
+  year wraps onto its own line under "FFF" rather than centering. *(Reverted an earlier mobile-centering pass
+  at the user's request.)*
 - Score cards **stack vertically** on phone (a wide 4-char score like 52.5 overflowed side-by-side).
-- The scenario **label is on its own line**; the **dropdown + "Reset" share the next line** (select uses
+- The scenario **label is on its own line**; the **dropdown + "Clear record" share the next line** (select uses
   `flex:1 1 0` so it shrinks instead of hogging the row).
 - Team controls keep blue-left/red-right via grid-areas; the optimize label + note drop below.
 - Finish board uses the colored medal + fixed-width columns; DNF checkbox sits inline; the desktop "VS"
@@ -341,6 +364,20 @@ Choices that should *not* be silently undone.
     duplicate result header**; **centered the page header on mobile**.
 22. **Clear record** (confirm-gated) zeroes all paces/5Ks (keeps lineups) → **blank scorecard** board.
 
+### Phase D — 2026-2027 cup (new rosters, 11 v 11, no no-show)
+23. **Header:** year **2026 → 2026-2027**; mobile header **re-aligned left** (year wraps under "FFF") —
+    reverted the Phase C mobile-centering.
+24. **One compact controls card:** merged the scenario row and the Lock/Optimise grid into a single
+    `.controls` card with a hairline divider ("a single session").
+25. **Team names back to generic:** "TT & SLK team" / "CM & SIN team" → **"Our team" / "Opponent"**.
+26. **Sticky score bar removed** entirely (markup + CSS + JS observer + `stickyName()`) — "don't need the
+    hanging effect now".
+27. **Roster refresh → 2026-2027:** 11 v 11, **nil no-show**. New `DEFAULTS` (§3); `applyPreset` no longer
+    marks no-shows; the blank "— Start blank" default loads rosters with **no teams** (everyone benched).
+28. **New scenario presets** from a fresh brute-force solver (`solve2026.py`): blank default + four Red
+    archetypes (balanced / spread / stacked / minimax-optimal), each paired with our solver-optimal response.
+    All four are **our wins** (41:35, 41:35, 39:37, 39.5:36.5) — verified live in-browser against the solver.
+
 ---
 
 ## 9. Technical / working notes
@@ -349,9 +386,11 @@ Choices that should *not* be silently undone.
 - **Verification approach (current):** a headless browser **is** available this session — Chromium at
   `/opt/pw-browsers/chromium-*/chrome-linux/chrome`, driven via `playwright-core` (`--no-sandbox`). Used for
   behavioural tests (lock guards, master-lock state, editable-time math, optimiser) **and** for rendered
-  screenshots (desktop + mobile). A Python engine replica (`solve.py`, using `fractions`) and jsdom tests
-  cross-check the scoring numbers. An **adversarial multi-agent diff review** (4 lenses + verification) was
-  run before finalising the lock/UI overhaul and caught 5 real defects (all fixed).
+  screenshots (desktop + mobile). Python engine replicas (`solve.py` for the 13-v-13 cup, **`solve2026.py`**
+  for the current 11-v-11 cup, both using `fractions`) and jsdom tests cross-check the scoring numbers — the
+  2026-2027 presets were verified live in-browser to match `solve2026.py` exactly (41:35, 41:35, 39:37,
+  39.5:36.5). An **adversarial multi-agent diff review** (4 lenses + verification) was run before finalising
+  the lock/UI overhaul and caught 5 real defects (all fixed).
 - **iOS gotcha:** Safari/Chrome on iPhone can't open local files directly; use the hosted Pages link.
 
 ---
@@ -380,17 +419,23 @@ Choices that should *not* be silently undone.
 
 ## 11. Quick reference for a fresh session
 
-- **Open `index.html`** to see the current state; the default scenario is the **announced final lineup with
-  FF no-show → Blue 30.5 : 42.5 Red**.
-- **Strategic bottom line:** Red is structurally favored (trio half-credit ⇒ ~12-min faster aggregate), and
-  **Blue's FF no-show forces a capped −5 team**, so Blue loses the announced matchup. Sacrifice the slow
-  walker (SLK), keep the aces in pairs.
+- **Open `index.html`** to see the current state; the default scenario is **blank** (rosters loaded,
+  everyone benched, board empty — you build from scratch). Pick a scenario to load a Red archetype + our
+  best response.
+- **Current cup = 2026-2027, 11 v 11, nil no-show.** Each side = 4 pairs + 1 trio (10 small teams; first 10
+  point slots `13…3` sum to 76 → 39+ wins). Team names "Our team" / "Opponent".
+- **Strategic bottom line:** Red is ~265 s faster on raw aggregate, but with **no no-show penalty** our best
+  response **wins every modelled Red lineup** (41:35 down to 39.5:36.5 in the toughest case). The win is
+  **positional**: take the top points with two fast pairs, bury our slows in **one** trio. Race-day win-%
+  is close (~46/54 in the toughest case) because the point margin is thin — execution matters.
 - **Don't undo:** whole-second time rounding; intentional half-points; faster-runner-on-leg-2; the real 4-F
   emblem logo; **pace as the single source of truth** for editable times (5K↔pace bidirectional; smart
-  shorthand); **no-show keeps the runner visible** (ns members are non-running markers; penalty auto-applies —
-  don't go back to benching); the **lock invariants** (locked = composition frozen, times editable; master
-  lock cascades + restores via `_ulock`); the result-first layout (header → scores → board, controls below,
-  win% below the board); **Clear record** + blank scorecard; controls/sticky blue-left/red-right.
+  shorthand); **no-show keeps the runner visible** when used (ns members are non-running markers; penalty
+  auto-applies — don't go back to benching), even though no 2026-2027 preset uses it; the **lock invariants**
+  (locked = composition frozen, times editable; master lock cascades + restores via `_ulock`); the
+  result-first layout (left-aligned header → scores → board, controls below, win% below the board);
+  **Clear record** + blank scorecard; the **one-card controls** (blue-left/red-right); **no sticky bar**
+  (removed — don't reintroduce); the **blank "— Start blank" default**.
 - **Not a bug:** the optimizer is a **best-response vs the other side's current lineup**; clicking both
   buttons oscillates by design (§5/§10).
 - **To publish:** merge `claude/team-roster-optimization-qjmgrg` into `main` and push; Pages serves
