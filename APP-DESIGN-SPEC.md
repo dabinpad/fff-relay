@@ -210,9 +210,11 @@ Choices that should *not* be silently undone.
 
 ### Slim sticky score bar (re-added)
 - A thin `position:fixed` bar (`#stickybar`) that slides down once the `.scorestrip`
-  scoreboard scrolls above the viewport (revealed via an **IntersectionObserver** on
-  `.scorestrip`, toggling `.show`). Content: **Blue score · verdict · Red score**, where the
-  verdict reads "Our team win" (blue) / "Opponent win" (red) / "Dead tie".
+  scoreboard is **~half scrolled above the top** (the big scores have gone, but before the
+  finish board reaches the top) — an **IntersectionObserver** on `.scorestrip` toggles `.show`
+  when `boundingClientRect.top < 0 && intersectionRatio < 0.5`. Content: **Blue score ·
+  verdict · Red score**, where the verdict reads "Our team win" (blue) / "Opponent win" (red)
+  / "Dead tie".
 - `renderResults` keeps it in sync and sets `#stickybar`'s `data-has` to `1` only when there's
   a real result (non-blank, lineups set); the observer won't reveal it otherwise. This is a
   fresh, simpler build than the earlier removed bar (no logo, no team names — just scores +
