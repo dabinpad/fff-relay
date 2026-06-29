@@ -43,5 +43,6 @@ The app is served by **GitHub Pages from `main`**. To publish a change:
 
 Open `index.html` in any browser, or drive it headless with **Playwright** (Chromium under
 `/opt/pw-browsers/…`, launched with `--no-sandbox`) for behaviour checks and screenshots.
-Scoring is cross-checked against a small **Python brute-force model**. See
+Scoring and the scenario lineups are cross-checked against a small Python brute-force model,
+[`solve_scenarios.py`](solve_scenarios.py) (`python3 solve_scenarios.py`). See
 [APP-DESIGN-SPEC § Technical / working notes](APP-DESIGN-SPEC.md#6-technical--working-notes).

@@ -57,9 +57,11 @@ number of teams):
 
 These **sum to 55** → a main team needs **more than 27.5 (i.e. 28+) to win**.
 
-- The scheme **generalises with the team count**: the previous 13-a-side cup had **12 teams**
-  → `13, 11, 10, … 2, 0` (sum 78, 40+ wins); a 7-a-side split → 14 teams → `15, 13, 12, …
-  2, 0`. The app derives the table from the live sub-team count, so it can't go stale.
+- The scheme **generalises with the small-team count** `N` (always even, since both sides
+  field the same number): the previous 13-a-side cup made **12 small teams** →
+  `13, 11, 10, … 2, 0` (sum 78, 40+ wins); if each side fielded **7 small teams** (14 total) it
+  would be `15, 13, 12, … 2, 0` (sum 105, 53+ wins). The app derives the table from the live
+  sub-team count, so it can't go stale.
 - Each main team's score = the sum of its small teams' points. **The higher total wins.**
 - **Tiebreak:** equal points → the main team with the **faster combined total time** (the
   sum of all its small-team times) wins. An exact time tie → **"dead tie"**.
