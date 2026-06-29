@@ -157,6 +157,7 @@
   /* time fields: a small wheel-picker chevron overlaid on the right edge (type, or tap ▾ for the wheel) */
   .timewrap{position:relative;display:inline-block}
   .timewrap input{padding-right:15px!important;padding-left:4px!important}
+  .timewrap input[readonly]{cursor:pointer}   /* touch: whole field opens the wheel */
   .timewrap .wheelbtn{position:absolute;right:1px;top:1px;bottom:1px;width:13px;border:none;border-left:1px solid var(--line);background:transparent;color:var(--ink-2);font-size:8px;line-height:1;cursor:pointer;border-radius:0 7px 7px 0;padding:0;display:flex;align-items:center;justify-content:center}
   .timewrap .wheelbtn:active{background:var(--brand-bg);color:var(--brand)}
   /* wheel modal (bottom sheet) — native <select>s render as iOS scroll wheels */
@@ -387,7 +388,7 @@
         <span class="tb-label"><label for="preset">Try a scenario</label><span class="help help-flush"><button type="button" class="help-btn" aria-label="About scenarios">?</button><span class="help-pop">Ready-made matchups — pick one to load both lineups. Lock a team (above) to keep it fixed and compare it against each opponent setup.</span></span></span>
         <div class="scenrow">
           <select id="preset"></select>
-          <button class="btn ghost" id="clear-times" title="Reset every runner's pace and 5K to 0:00 (keeps the team lineups) so you can type in the real race times">Clear record</button>
+          <button class="btn ghost" id="clear-times" title="Empty the finish board (remove the lineups, except locked teams) and reset every pace and 5K to 0:00. Pick a scenario to start again.">Clear record</button>
         </div>
       </div>
     </div>
@@ -401,7 +402,7 @@
           <strong>Trio</strong> = leg-1 runner (full) + average of the two leg-2 runners → <code>t_leg1 + (a+b)/2</code>. Fastest-on-leg-1 is set by default.<br>
           <strong>No-show (NS)</strong> — tick <b>NS</b> next to a runner in section&nbsp;1 to mark them absent. They stay on their team as a marker and that team automatically becomes a capped no-show team (<code>−5</code>, <strong>max 6 pts</strong>); a present teammate runs the full 10 km. <b>Optimise</b> still finds the lowest-cost sacrifice (solo <code>2×5K</code>, or a 10K-trio that buries a slow teammate).<br>
           <strong>Time entry</strong> — type digits then tap away (or Enter): <code>415</code>→4:15, <code>2115</code>→21:15, <code>4</code>→4:00; or tap the <b>▾</b> on a field for a min:sec wheel. In section&nbsp;1 you can enter either the <em>pace</em> (5K fills in) or the <em>5K</em> (pace fills in).<br>
-          <strong>Clear all times</strong> — zeroes every pace/5K (keeping the lineups) so the board becomes a blank scorecard to fill in with the real race times.<br>
+          <strong>Clear record</strong> — empties the finish board (removes the lineups, except any locked team) and zeroes every pace/5K. Pick a scenario from the dropdown to start again.<br>
           <strong>DNF</strong> (toggle on a team) is placed last for 0 pts and takes an extra <code>−5</code>.<br>
           <strong>Actual times</strong> — both the <em>team total</em> (on each card) and each runner's <em>leg time</em> (next to their name) are editable. Editing the team total splits it proportionally across the runners; editing one runner's leg holds the team total and rebalances the partner — and the runner's pace updates to match.<br>
           <strong>Lock</strong> (toggle on a team) — pins that exact team: the optimiser won't touch it and its runners can't be added or removed (you can still edit times). E.g. put your chosen 10 km runner alone on a team and lock it, then optimise the rest.<br>
@@ -715,7 +716,11 @@ function applyPreset(p){
 
 /* =================== RENDER =================== */
 const el=id=>document.getElementById(id);
+// touch devices: time fields are read-only and tap-to-open-wheel (the whole field is the target —
+// no need to hit the tiny ▾, and no on-screen keyboard). Desktop (fine pointer) keeps inline typing.
+const COARSE = !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
 const WHEEL_BTN='<button type="button" class="wheelbtn" data-act="wheel" tabindex="-1" aria-label="pick time with wheel">▾</button>';
+const TIME_RO = COARSE ? 'readonly' : '';   // injected into time inputs
 function syncLockLabels(){const o=el('lock-our-name'),p=el('lock-opp-name');if(o)o.textContent='Blue';if(p)p.textContent='Red';}   // short, colour-coded labels (not the full team name)
 function syncLockUI(){['our','opp'].forEach(s=>{const b=el(s==='our'?'opt-our':'opt-opp');if(!b)return;const locked=sideLocked(s);b.disabled=locked;b.classList.toggle('is-locked',locked);b.title=locked?'This team is locked — untick its lock by the scenario picker to optimise.':'';});}
 // the whole-team (side) lock, settable from the controls chip OR either section's panel toggle (all kept in sync).
@@ -734,8 +739,8 @@ function renderRoster(side){
   const rows=T.runners.map(r=>`
     <tr data-id="${r.id}" class="${r.ns?'nsrow':''}">
       <td><input class="r-name" value="${escapeAttr(r.name)}" data-side="${side}" data-id="${r.id}" aria-label="runner name"></td>
-      <td class="num"><span class="timewrap"><input class="r-pace" value="${escapeAttr(r.pace)}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="pace per km">${WHEEL_BTN}</span></td>
-      <td class="num"><span class="timewrap"><input class="r-5k" id="fivek-${r.id}" value="${r.actSec!=null?fmtTime(r.actSec):fmtTime(fiveK(paceToSec(r.pace)??0))}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="5K time">${WHEEL_BTN}</span></td>
+      <td class="num"><span class="timewrap"><input class="r-pace" value="${escapeAttr(r.pace)}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="pace per km" ${TIME_RO}>${WHEEL_BTN}</span></td>
+      <td class="num"><span class="timewrap"><input class="r-5k" id="fivek-${r.id}" value="${r.actSec!=null?fmtTime(r.actSec):fmtTime(fiveK(paceToSec(r.pace)??0))}" data-side="${side}" data-id="${r.id}" inputmode="numeric" aria-label="5K time" ${TIME_RO}>${WHEEL_BTN}</span></td>
       <td class="num"><label class="nsbox" title="no-show: marks this runner absent. They stay on their team as a marker and that team auto-becomes a capped 10 km no-show team (−5, max 6 pts); a present teammate runs the 10 km."><input type="checkbox" class="r-ns" data-side="${side}" data-id="${r.id}" ${r.ns?'checked':''}></label></td>
       <td class="num"><button class="x" data-act="del-runner" data-side="${side}" data-id="${r.id}" title="remove" ${locked?'disabled':''}>×</button></td>
     </tr>`).join('');
@@ -763,7 +768,7 @@ function chip(side,r,inPool,locked){
   let time;
   if(inPool) time=`<span class="pace">${fmtTime(fiveK(r.p))}</span>`;
   else if(r.ns) time=`<span class="pace ns-tag">no-show</span>`;
-  else time=`<span class="timewrap"><input class="pace leg-edit" data-act="edit-leg" data-side="${side}" data-id="${r.id}" value="${fmtTime(fiveK(r.p))}" inputmode="numeric" aria-label="${escapeAttr(r.name)} leg time" title="actual 5 km leg time — sets this runner's pace and rebalances the partner to keep the team total">${WHEEL_BTN}</span>`;
+  else time=`<span class="timewrap"><input class="pace leg-edit" data-act="edit-leg" data-side="${side}" data-id="${r.id}" value="${fmtTime(fiveK(r.p))}" inputmode="numeric" aria-label="${escapeAttr(r.name)} leg time" title="actual 5 km leg time — sets this runner's pace and rebalances the partner to keep the team total" ${TIME_RO}>${WHEEL_BTN}</span>`;
   // locked teams and no-show markers keep their runners — no remove button
   return `<span class="chip${locked?' chip-locked':''}${r.ns?' chip-ns':''}" ${inPool?`data-act="pool-add" data-side="${side}" data-id="${r.id}"`:''}>
     <span>${escapeHtml(r.name)}</span>${time}
@@ -811,7 +816,7 @@ function renderLineup(side){
         <span style="display:flex;align-items:center;gap:8px">
           ${badge}
           ${(tt.t!=null&&isFinite(tt.t)&&members.length>=1&&!t.dnf)
-            ? `<span class="timewrap"><input class="tcard-time tt-edit" data-act="edit-total" data-side="${side}" data-team="${t.id}" value="${fmtTime(tt.t)}" inputmode="numeric" aria-label="Team ${idx+1} total time" title="actual team total time — splits proportionally across the runners">${WHEEL_BTN}</span>`
+            ? `<span class="timewrap"><input class="tcard-time tt-edit" data-act="edit-total" data-side="${side}" data-team="${t.id}" value="${fmtTime(tt.t)}" inputmode="numeric" aria-label="Team ${idx+1} total time" title="actual team total time — splits proportionally across the runners" ${TIME_RO}>${WHEEL_BTN}</span>`
             : `<span class="tcard-time">${tt.t==null?'—':fmtTime(tt.t)}</span>`}
           ${t.lock?'':`<button class="x" data-act="del-team" data-side="${side}" data-team="${t.id}" title="remove team">×</button>`}
         </span>
@@ -1106,6 +1111,7 @@ document.addEventListener('change',e=>{
 });
 
 document.addEventListener('click',e=>{
+  if(e.target.matches&&e.target.matches('.timewrap input[readonly]')){openWheel(e.target);return;}   // touch: tap the field → wheel
   const b=e.target.closest('[data-act]'); if(!b)return;
   const act=b.dataset.act, side=b.dataset.side;
   if(act==='wheel'){const inp=b.closest('.timewrap').querySelector('input');if(inp)openWheel(inp);return;}
@@ -1146,10 +1152,14 @@ function delRunner(side,id){
   state[side].teams.forEach(t=>{t.memberIds=t.memberIds.filter(x=>x!==id);if(t.leg1Id===id)t.leg1Id=null;});
   renderRoster(side);renderLineup(side);renderResults();
 }
-// zero every runner's pace & 5K (keeps the team lineups) so the board becomes a blank scorecard to fill in
+// full reset: empty the finish board (drop every unlocked team) AND zero all times.
+// (Locked teams are kept.) Pick a scenario afterwards to load lineups + default times again.
 function clearAllTimes(){
-  if(!window.confirm('Clear record?\n\nThis resets every runner’s pace and 5K to 0:00 so you can type in the actual race times. The team lineups are kept.\n\nTo bring the default times back, pick a scenario from the dropdown.')) return;
-  ['our','opp'].forEach(side=>state[side].runners.forEach(r=>{r.pace='0:00';r.actSec=null;}));
+  if(!window.confirm('Clear record?\n\nThis empties the finish board (removes the lineups — except any team you have locked) and resets every runner’s pace and 5K to 0:00.\n\nPick a scenario from the dropdown to start again.')) return;
+  ['our','opp'].forEach(side=>{
+    state[side].teams=state[side].teams.filter(t=>t.lock);          // keep locked teams only
+    state[side].runners.forEach(r=>{r.pace='0:00';r.actSec=null;});
+  });
   el('optnote').textContent='';
   renderAll();
 }
