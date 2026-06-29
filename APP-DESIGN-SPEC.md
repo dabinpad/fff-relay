@@ -384,6 +384,10 @@ Choices that should *not* be silently undone.
     field = target, no keyboard); desktop keeps inline typing. (b) **Clear record now empties the
     finish board** (drops unlocked teams) in addition to zeroing times — a user couldn't clear a
     leftover team because the old Clear kept lineups.
+36. **UAT round 3 — wheel zoom fix.** Tapping a time field zoomed iOS in (it focused the readonly
+    input). Fixed by giving the readonly input **`pointer-events:none`** so the tap falls through
+    to `.timewrap` (which opens the wheel) and the input **never focuses** → no zoom. Tapping the
+    ▾ chevron was already fine (a button, not an input).
 
 ---
 

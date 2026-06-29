@@ -157,7 +157,10 @@
   /* time fields: a small wheel-picker chevron overlaid on the right edge (type, or tap ▾ for the wheel) */
   .timewrap{position:relative;display:inline-block}
   .timewrap input{padding-right:15px!important;padding-left:4px!important}
-  .timewrap input[readonly]{cursor:pointer}   /* touch: whole field opens the wheel */
+  /* touch: the readonly time input ignores taps so they fall through to .timewrap (which opens the wheel) —
+     the input never focuses, so iOS never zooms in on it. */
+  .timewrap input[readonly]{pointer-events:none}
+  .timewrap:has(input[readonly]){cursor:pointer}
   .timewrap .wheelbtn{position:absolute;right:1px;top:1px;bottom:1px;width:13px;border:none;border-left:1px solid var(--line);background:transparent;color:var(--ink-2);font-size:8px;line-height:1;cursor:pointer;border-radius:0 7px 7px 0;padding:0;display:flex;align-items:center;justify-content:center}
   .timewrap .wheelbtn:active{background:var(--brand-bg);color:var(--brand)}
   /* wheel modal (bottom sheet) — native <select>s render as iOS scroll wheels */
@@ -1111,7 +1114,9 @@ document.addEventListener('change',e=>{
 });
 
 document.addEventListener('click',e=>{
-  if(e.target.matches&&e.target.matches('.timewrap input[readonly]')){openWheel(e.target);return;}   // touch: tap the field → wheel
+  // touch: the whole time field (readonly input has pointer-events:none → tap lands on .timewrap) opens the wheel
+  const tw=e.target.closest&&e.target.closest('.timewrap');
+  if(tw){const ro=tw.querySelector('input[readonly]');if(ro){openWheel(ro);return;}}
   const b=e.target.closest('[data-act]'); if(!b)return;
   const act=b.dataset.act, side=b.dataset.side;
   if(act==='wheel'){const inp=b.closest('.timewrap').querySelector('input');if(inp)openWheel(inp);return;}
