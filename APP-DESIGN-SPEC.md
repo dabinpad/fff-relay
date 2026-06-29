@@ -34,7 +34,7 @@ time, score the meet, and instantly see who wins** — with:
 - a **screenshot-ready result block** to share the outcome with the team.
 
 It exists to drive the lineup decision on race day and to explore the strategic question
-analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis-one-committed-lineup-a-close-fight).
+analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis).
 
 ---
 
@@ -132,9 +132,9 @@ analysed in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis-one-committed-
 - **Clear record** (in the controls card) — after a confirm, zeroes every pace/5K (keeps the
   lineups) to enter the real race times; the board falls back to the blank scorecard. Pick a
   scenario to restore defaults.
-- **Scenario presets (dropdown):** default **"Start blank"** + four scenarios that each field
-  **one robust Blue lineup** (minimax across the Red plays) vs a different Red play, toughest
-  first. The actual lineups and scores live in
+- **Scenario presets (dropdown):** default **"Start blank"**, then **Random** (both teams
+  grouped by similar pace — the naive baseline) and four Red strategic plays each paired with
+  **our optimised best response**. The actual lineups and scores live in
   **[TEAM-LINEUP §3](TEAM-LINEUP.md#3-the-scenarios-app-presets)**.
 - **One compact controls card** (below the finish board, above the rules), stacked as four
   thin lines: (1) the centred **⚡ Auto-optimize** title, (2) a single row of **four**
@@ -336,13 +336,19 @@ Choices that should *not* be silently undone.
     simplified to **"Start blank"**; the **toughest Red is scenario #2**. Honest result: the
     robust lineup **splits 2–2** (loses 37:39 to Red optimal/balanced, wins 39:37 / 40:36 vs
     stacked / spread) — no single lineup sweeps all four. See
-    [TEAM-LINEUP §2–3](TEAM-LINEUP.md#2-strategic-analysis-one-committed-lineup-a-close-fight).
+    [TEAM-LINEUP §2–3](TEAM-LINEUP.md#2-strategic-analysis).
 31. **Points-table bug fix → derived scoring.** The points were a fixed 12-slot array
     (`[13,11,…,0]`), wrong for a 10-team meet. Replaced with **`pointsFor(K)`** derived from
     the live sub-team count (1st = K+1, last = 0, middle = K−i); the rules-drawer table is now
     read-only. Win threshold for 10 teams is **28+ (sum 55)**. Re-ran `solve_robust.py` under
     the corrected points: same robust lineup, scores now **26:29 / 26:29 / 29:26 / 29:26**, and
     the race-day win-chance shows **Red favoured in 3 of 4** scenarios.
+32. **Scenarios: back to per-Red optimised + a Random baseline** (`solve_scenarios.py`).
+    Reverted from the single robust lineup to **our best response per Red play** (wins all four:
+    29.5:25.5 / 30:25 / 29:26 / 30:25). Added a **Random** scenario as #2 (toughest → #3) where
+    **both** teams group by similar pace — trio = a mid runner + the two slowest (Red
+    `Oyster*+GoG+AK`, Blue `DB*+Penny+Apoon`); that naive matchup is **27 : 28 Red**. The
+    construction was verified to reproduce the user's exact example trios.
 
 ---
 
@@ -354,8 +360,9 @@ Choices that should *not* be silently undone.
   (`--no-sandbox`). Used for behavioural tests (lock guards, master-lock state, editable-time
   math, optimiser) **and** rendered screenshots (desktop + mobile). A **Python brute-force
   model** (using `fractions`) cross-checks the scoring numbers — the 2026-2027 presets were
-  verified live in-browser to match the solver exactly (the robust lineup scores 26:29, 26:29,
-  29:26, 29:26 vs Red optimal / balanced / stacked / spread, out of 55). An
+  verified live in-browser to match the solver exactly (our optimised responses win 29.5:25.5 /
+  30:25 / 29:26 / 30:25 vs Red optimal / balanced / stacked / spread; the naive Random matchup
+  is 27:28, out of 55). An
   **adversarial multi-agent diff review** (4 lenses + verification) was run before finalising
   the lock/UI overhaul and caught 5 real defects (all fixed).
 - **iOS gotcha:** Safari/Chrome on iPhone can't open local files directly; use the hosted
@@ -381,7 +388,8 @@ Choices that should *not* be silently undone.
 
 ### Features, not fixes (skip unless wanted)
 3. **One-click equilibrium / minimax.** Alternating best-responses oscillate by design; the
-   strategic answer is the robust framing in [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis-one-committed-lineup-a-close-fight),
+   strategic framing — per-Red best response vs the naive Random baseline — lives in
+   [TEAM-LINEUP §2](TEAM-LINEUP.md#2-strategic-analysis),
    not a solver in the app.
 4. **Save/share a result image** (beyond the manual screencap) — e.g. render-to-canvas
    export of the result block.
@@ -391,8 +399,8 @@ Choices that should *not* be silently undone.
 ## 8. Quick reference for a fresh session
 
 - **Open `index.html`** to see the current state; the default scenario is **blank** (rosters
-  loaded, everyone benched, board empty — you build from scratch). Pick a scenario to field
-  our **one robust Blue lineup** against a Red play.
+  loaded, everyone benched, board empty — you build from scratch). Pick a scenario: **Random**
+  (both teams naive) or a Red play + our optimised counter.
 - **Current cup = 2026-2027, 11 v 11, nil no-show.** Each side = 4 pairs + 1 trio (10 small
   teams; points derived from the team count → `11,9,8,…,2,0`, sum 55 → 28+ wins). Team names "Our team" /
   "Opponent". Rules in [GAME-RULES](GAME-RULES.md); rosters + strategy in
@@ -406,8 +414,8 @@ Choices that should *not* be silently undone.
   board); **Clear record** + blank scorecard; the **one-card controls** (4 thin lines, 4-up
   optimise row, blue-left/red-right); the **slim sticky score bar** (score · verdict · score —
   re-added by request); **no header logo** (removed — don't reintroduce); the **"Start blank"**
-  default; the scenarios all field **one robust (minimax) Blue lineup** vs each Red play (not a
-  per-Red best response).
+  default; the scenarios = a **Random** (both-naive) baseline + four Red plays each with **our
+  optimised best response**; **points derived from the team count** (`pointsFor(K)`).
 - **Not a bug:** the optimizer is a **best-response vs the other side's current lineup**;
   clicking both buttons oscillates by design (§2/§7).
 - **To publish:** merge the `claude/…` branch into `main` and push; Pages serves `index.html`

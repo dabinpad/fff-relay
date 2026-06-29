@@ -638,22 +638,29 @@ function lineupFromNames(side,groups){
 // 2026-2027 format: 11 v 11, no no-show. Each side = 4 pairs + 1 trio (5 small teams).
 // A 3-name group is the trio; lineupFromNames sets its fastest member on leg 1.
 const LINEUPS={
-  // ONE robust Blue lineup — minimax across the four Red plays below (we commit before Red shows,
-  // so the same lineup is fielded in every scenario rather than reacting per-Red).
-  ourRobust:   [['LW','DB','Apoon'],['TT','WL'],['Cai','9J'],['CM','CP'],['SLK','Penny']],
-  // Red archetypes (4 pairs + 1 trio)
+  // 'Random' — BOTH teams group by similar pace; the trio = a mid runner + the two slowest
+  // (the naive, no-strategy lineup). Reproduces the user's examples: Oyster+GoG+AK / DB+Penny+Apoon.
+  ourRandom:   [['TT','WL'],['Cai','CM'],['CP','9J'],['LW','SLK'],['DB','Penny','Apoon']],
+  redRandom:   [['LC','SIN'],['Sandro','FL'],['KTY','LP'],['LS','5K'],['Oyster','GoG','AK']],
+  // Red strategic plays (4 pairs + 1 trio)
   redOptimal:  [['LC','SIN'],['Sandro','FL'],['LP','LS'],['Oyster','5K'],['KTY','GoG','AK']],
   redBalanced: [['LC','LP'],['SIN','LS'],['Sandro','Oyster'],['FL','5K'],['KTY','GoG','AK']],
   redStacked:  [['LC','SIN'],['Sandro','FL'],['KTY','LP'],['LS','Oyster'],['5K','GoG','AK']],
-  redSpread:   [['LC','GoG'],['SIN','5K'],['Sandro','Oyster'],['FL','LS'],['KTY','LP','AK']]
+  redSpread:   [['LC','GoG'],['SIN','5K'],['Sandro','Oyster'],['FL','LS'],['KTY','LP','AK']],
+  // Our OPTIMISED best response to each Red strategic play (solver-computed)
+  ourVsOptimal: [['Cai','LW','Apoon'],['TT','WL'],['CM','DB'],['CP','SLK'],['9J','Penny']],
+  ourVsBalanced:[['LW','DB','Apoon'],['TT','CM'],['WL','9J'],['Cai','CP'],['SLK','Penny']],
+  ourVsStacked: [['Cai','LW','Apoon'],['TT','WL'],['CM','DB'],['CP','9J'],['SLK','Penny']],
+  ourVsSpread:  [['LW','DB','Apoon'],['TT','CM'],['WL','CP'],['Cai','9J'],['SLK','Penny']]
 };
-// Every scenario fields the SAME robust Blue lineup vs a different Red play (no no-show this year).
+// Random = both teams naive; the rest pair a Red play with our best response (no no-show this year).
 const PRESETS=[
   {label:'Start blank'},
-  {label:'Toughest — Red’s optimal (26 : 29)',our:'ourRobust',opp:'redOptimal'},
-  {label:'Red plays balanced (26 : 29)',our:'ourRobust',opp:'redBalanced'},
-  {label:'Red stacks both aces (29 : 26)',our:'ourRobust',opp:'redStacked'},
-  {label:'Red spreads its aces (29 : 26)',our:'ourRobust',opp:'redSpread'}
+  {label:'Random — both teams by similar pace (27 : 28)',our:'ourRandom',opp:'redRandom'},
+  {label:'Toughest — Red’s optimal (29.5 : 25.5)',our:'ourVsOptimal',opp:'redOptimal'},
+  {label:'Red plays balanced (30 : 25)',our:'ourVsBalanced',opp:'redBalanced'},
+  {label:'Red stacks both aces (29 : 26)',our:'ourVsStacked',opp:'redStacked'},
+  {label:'Red spreads its aces (30 : 25)',our:'ourVsSpread',opp:'redSpread'}
 ];
 
 function sideLocked(side){const b=el(side==='our'?'lock-our':'lock-opp');return !!(b&&b.checked);}
