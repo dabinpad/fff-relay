@@ -22,6 +22,15 @@ a race-day Monte-Carlo win chance.
 teams total). See [GAME-RULES](GAME-RULES.md) for the ruleset and [TEAM-LINEUP](TEAM-LINEUP.md)
 for who's running and how we should line up.
 
+## Session commands
+
+Two project slash commands (in `.claude/commands/`) bookend a working session:
+
+- **`/start`** — orient on the app: prints git state, points at the docs, and recaps the
+  invariants not to undo. Optionally takes a task focus.
+- **`/end`** — wrap up: what changed, verification evidence, publish state, and whether the
+  docs are in sync.
+
 ## Publishing
 
 The app is served by **GitHub Pages from `main`**. To publish a change:
